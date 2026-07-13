@@ -102,7 +102,7 @@
 
   .counter-label{
     font-family: var(--font-mono); font-size:11px; letter-spacing:3px;
-    color: var(--muted-2); font-weight:700;
+    color: var(--muted-2); font-weight:700; margin-bottom:6px;
   }
   .counter-number{
     font-family: var(--font-display);
@@ -116,24 +116,78 @@
     35%{ text-shadow: 0 0 90px var(--accent), 0 0 30px var(--accent); }
     100%{ text-shadow: 0 0 60px var(--accent-dim); }
   }
-  .counter-status{ color: var(--muted); font-size: clamp(12px, 2.2vmin, 15px); font-weight:500; margin-top:-6px; }
+  .counter-status{ color: var(--muted); font-size: clamp(12px, 2.2vmin, 15px); font-weight:500; }
 
-  .log-btn-zone{ display:flex; justify-content:center; padding: clamp(8px, 2vmin, 20px) 0 clamp(4px, 1vmin, 8px); }
-  .log-btn{
-    width: clamp(130px, 32vmin, 260px); height: clamp(130px, 32vmin, 260px); border-radius:50%;
-    background: radial-gradient(circle at 35% 30%, #1c130a, #0a0a0c 70%);
-    border: 1.5px solid var(--accent);
-    box-shadow: 0 0 0 1px #0000, 0 0 40px -6px var(--accent-dim), inset 0 0 30px #ff7a2e11;
-    color: var(--text);
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(13px, 2.4vmin, 22px); letter-spacing: 2px;
-    cursor: pointer;
-    transition: transform .08s ease, box-shadow .2s ease;
+  /* ---- Dynamic counter grid (up to MAX_COUNTERS cards, replaces the old single Log Task circle) ---- */
+  .counters-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: clamp(10px, 2vmin, 16px);
+    padding: clamp(6px, 1.5vmin, 14px) 0;
   }
-  .log-btn:hover{ box-shadow: 0 0 0 1px #0000, 0 0 60px -4px var(--accent-dim), inset 0 0 30px #ff7a2e22; }
-  .log-btn:active{ transform: scale(.96); }
-  .log-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  @media (max-width: 520px){ .counters-grid{ grid-template-columns: 1fr; } }
+  .counter-card{
+    position:relative;
+    background: var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding: clamp(14px, 2.4vmin, 20px) clamp(10px, 2vmin, 14px);
+    display:flex; flex-direction:column; align-items:center; gap: clamp(8px, 1.6vmin, 12px);
+    text-align:center;
+  }
+  .counter-card-label{
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
+    color: var(--muted-2); font-weight:700; background: var(--panel-2);
+    border:1px solid var(--border); border-radius:999px; padding:6px 12px;
+  }
+  .counter-card-label-input{
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
+    color: var(--muted-2); font-weight:700; background: var(--panel-2);
+    border:1px solid var(--border); border-radius:999px; padding:6px 26px 6px 12px;
+    text-align:center; text-transform:uppercase; width:100%; cursor:text;
+    transition: border-color .15s, color .15s;
+  }
+  .counter-card-label-input:hover{ border-color:#3a3a42; }
+  .counter-card-label-input:focus{ outline:none; border-color: var(--accent); color: var(--text); }
+  .counter-remove{
+    position:absolute; top:8px; right:8px; width:20px; height:20px; z-index:2;
+    border-radius:50%; border:1px solid var(--border); background: var(--panel-2);
+    color: var(--muted); font-size:12px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+    transition: color .15s, border-color .15s, background .15s, transform .1s;
+  }
+  .counter-remove:hover{ color: var(--accent); border-color: var(--accent); }
+  .counter-remove:active{ transform: scale(.9); }
+  .counter-remove.armed{
+    background: var(--accent); border-color: var(--accent); color:#140900; font-weight:900;
+  }
+  .counter-card.add-tile{
+    background: transparent; border:1.5px dashed var(--border); border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; cursor:pointer; color: var(--muted); width:100%;
+    transition: border-color .15s, color .15s; font-family: var(--font-body);
+  }
+  .counter-card.add-tile:hover{ border-color: var(--accent); color: var(--accent); }
+  .add-tile-icon{ font-family: var(--font-display); font-size: clamp(26px, 5vmin, 38px); font-weight:900; line-height:1; }
+  .add-tile-label{ font-family: var(--font-mono); font-size:10px; letter-spacing:2px; font-weight:700; }
+  .counter-card-num{
+    font-family: var(--font-display); font-weight:900; color: var(--accent);
+    font-size: clamp(32px, 7vmin, 52px); line-height:1;
+    text-shadow: 0 0 40px var(--accent-dim);
+  }
+  .counter-card-num.flash{ animation: flashPulse .32s ease; }
+  .counter-card-btns{ display:flex; gap:8px; width:100%; }
+  .ctr-btn{
+    flex:1; height: clamp(32px, 5.5vmin, 40px); border-radius:999px;
+    font-family: var(--font-display); font-weight:900; font-size:16px;
+    cursor:pointer; transition: filter .15s, transform .08s;
+  }
+  .ctr-btn:active{ transform: scale(.94); }
+  .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
+  .ctr-btn.minus{
+    background: transparent; border:1.5px dashed var(--border); color: var(--muted);
+  }
+  .ctr-btn.minus:not(:disabled):hover{ border-color: var(--accent); color: var(--text); }
+  .ctr-btn.plus{
+    background: var(--accent); border:1.5px solid var(--accent); color:#140900;
+  }
+  .ctr-btn.plus:not(:disabled):hover{ filter: brightness(1.12); }
 
   .action-row{ display:flex; flex-wrap:wrap; gap: clamp(8px, 2vmin, 14px); }
   .btn{
@@ -215,9 +269,13 @@
   body.compact .summary-bar{ display:none; }
   body.compact .grid{ grid-template-columns: 1fr; gap:10px; max-width: 320px; margin: 0 auto; }
   body.compact .panel{ display:none; }
-  body.compact .counter-number{ font-size:44px; }
-  body.compact .log-btn{ width:88px; height:88px; font-size:10px; }
-  body.compact .log-btn-zone{ padding:6px 0; }
+  body.compact .counters-grid{ grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap:6px; }
+  body.compact .counter-card{ padding:8px 4px; gap:6px; }
+  body.compact .counter-card-label-input{ font-size:8.5px; padding:4px 7px; pointer-events:none; }
+  body.compact .counter-card-num{ font-size:22px; }
+  body.compact .ctr-btn{ height:24px; font-size:12px; }
+  body.compact .counter-remove{ display:none; }
+  body.compact .add-tile{ display:none; }
   body.compact .btn{ font-size:11px; padding:9px; min-width:0; }
   body.compact .note{ display:none; }
 
@@ -292,13 +350,10 @@
 
       <div>
         <div class="counter-label">TASKS COMPLETED</div>
-        <div class="counter-number" id="counterNum">0</div>
         <div class="counter-status" id="counterStatus">Ready to log</div>
       </div>
 
-      <div class="log-btn-zone">
-        <button class="log-btn" id="logBtn">LOG TASK</button>
-      </div>
+      <div class="counters-grid" id="countersGrid"></div>
 
       <div class="undo-hint" id="undoHint"></div>
 
@@ -350,7 +405,7 @@
     <div class="field"><label>Date</label><input type="date" id="editDate"></div>
     <div class="field"><label>Start Time</label><input type="time" id="editStart"></div>
     <div class="field"><label>End Time</label><input type="time" id="editEnd"></div>
-    <div class="field"><label>Tasks</label><input type="number" min="0" id="editTasks"></div>
+    <div id="editCountsFields"></div>
     <div class="modal-actions">
       <button class="btn danger" id="editDeleteBtn">Delete</button>
       <button class="btn" id="editCancelBtn">Cancel</button>
@@ -417,19 +472,43 @@ function storageSet(data){
   }
 }
 
-let current = null;   // { startTime, count, lastLogTime, onBreak, breakStart, breaks: [{start,end}] }
-let history = [];     // [{ start, end, tasks, edited? }]
-let settings = { autoStartShift: false, soundEnabled: true, compactMode: false };
+let current = null;   // { startTime, counts: {<counterId>: n, ...}, lastAction: {key,dir,time}, onBreak, breakStart, breaks: [{start,end}] }
+let history = [];     // [{ start, end, counts: {<counterId>: n, ...}, tasks, edited? }]
+const DEFAULT_COUNTERS = [
+  { id: 'a', name: 'NUMBER OF TASK' },
+  { id: 'b', name: 'BOXES CREATED' },
+  { id: 'c', name: 'TOO FAR' },
+];
+const MAX_COUNTERS = 5;
+let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
 let editingIndex = null;
+
+function escapeAttr(str){
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function newCounterId(){
+  return 'c' + Date.now().toString(36) + Math.floor(Math.random()*1000);
+}
+
+// Migrate an older shift shape (single `count`/`tasks` number, no per-type
+// breakdown) into a counts object keyed by counter id. Old data is treated as
+// if it was all logged under the first counter, so nothing is lost.
+function migrateCounts(obj){
+  if(obj && obj.counts) return obj.counts;
+  const legacy = (obj && (obj.count ?? obj.tasks)) || 0;
+  return { a: legacy };
+}
+function totalCount(counts){
+  return Object.values(counts || {}).reduce((s, v) => s + (v || 0), 0);
+}
 
 const els = {
   shiftPill: document.getElementById('shiftPill'),
   shiftDot: document.getElementById('shiftDot'),
   shiftPillText: document.getElementById('shiftPillText'),
   startedBadge: document.getElementById('startedBadge'),
-  counterNum: document.getElementById('counterNum'),
   counterStatus: document.getElementById('counterStatus'),
-  logBtn: document.getElementById('logBtn'),
+  countersGrid: document.getElementById('countersGrid'),
   undoBtn: document.getElementById('undoBtn'),
   undoHint: document.getElementById('undoHint'),
   breakBtn: document.getElementById('breakBtn'),
@@ -451,7 +530,7 @@ const els = {
   editDate: document.getElementById('editDate'),
   editStart: document.getElementById('editStart'),
   editEnd: document.getElementById('editEnd'),
-  editTasks: document.getElementById('editTasks'),
+  editCountsFields: document.getElementById('editCountsFields'),
   editSaveBtn: document.getElementById('editSaveBtn'),
   editCancelBtn: document.getElementById('editCancelBtn'),
   editDeleteBtn: document.getElementById('editDeleteBtn'),
@@ -480,11 +559,23 @@ function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 function loadState(){
   const data = storageGet() || {};
   current = data.current || null;
-  history = data.history || [];
+  history = (data.history || []).map(h => ({ ...h, counts: migrateCounts(h), tasks: h.tasks ?? totalCount(migrateCounts(h)) }));
   settings = Object.assign({ autoStartShift: false, soundEnabled: true, compactMode: false }, data.settings || {});
+  if(!Array.isArray(settings.counters) || settings.counters.length === 0){
+    settings.counters = DEFAULT_COUNTERS.map(c => ({ ...c }));
+  }
+  settings.counters = settings.counters.slice(0, MAX_COUNTERS);
+
+  if(current){
+    current.counts = migrateCounts(current);
+    settings.counters.forEach(c => { if(current.counts[c.id] === undefined) current.counts[c.id] = 0; });
+    current.lastAction = current.lastAction || null;
+  }
 
   if(settings.autoStartShift && !current){
-    current = { startTime: new Date().toISOString(), count: 0, lastLogTime: null, onBreak: false, breakStart: null, breaks: [] };
+    const counts = {};
+    settings.counters.forEach(c => { counts[c.id] = 0; });
+    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
   }
 
   document.body.classList.toggle('compact', !!settings.compactMode);
@@ -534,8 +625,9 @@ function renderSummary(){
   });
   if(current){
     const d = new Date(current.startTime);
-    if(d >= weekStart){ weekTasks += current.count; weekShifts++; }
-    if(d >= monthStart){ monthTasks += current.count; monthShifts++; }
+    const curTotal = totalCount(current.counts);
+    if(d >= weekStart){ weekTasks += curTotal; weekShifts++; }
+    if(d >= monthStart){ monthTasks += curTotal; monthShifts++; }
   }
 
   els.summaryBar.innerHTML =
@@ -554,20 +646,20 @@ function render(){
   els.shiftPillText.textContent = onBreak ? 'On break' : (active ? 'Shift active' : 'Start a shift');
   els.startedBadge.textContent = active ? `Started ${fmtTime(current.startTime)}` : 'No shift running';
 
-  const count = active ? current.count : 0;
-  els.counterNum.textContent = count;
+  const counts = active ? current.counts : {};
+  const count = totalCount(counts);
+  renderCounters();
   els.counterStatus.textContent = !active ? 'Start a shift to begin'
     : onBreak ? 'On break — log paused'
     : (count === 0 ? 'Ready to log' : 'Logged just now');
 
-  els.logBtn.disabled = !active || onBreak;
-  els.undoBtn.disabled = !active || count === 0;
+  els.undoBtn.disabled = !active || !current.lastAction;
   els.breakBtn.disabled = !active;
   els.breakBtn.innerHTML = onBreak ? '▶ &nbsp;Resume' : '⏸ &nbsp;Break';
   els.endBtn.disabled = false;
   els.endBtn.innerHTML = active ? '■ &nbsp;End Shift' : '▷ &nbsp;Start Shift';
 
-  els.undoHint.textContent = (active && current.lastLogTime) ? timeAgoLabel(current.lastLogTime) : '';
+  els.undoHint.textContent = (active && current.lastAction) ? timeAgoLabel(current.lastAction.time) : '';
 
   const histTotal = history.reduce((s,h) => s + h.tasks, 0);
   const totalLogged = histTotal + count;
@@ -596,10 +688,113 @@ function render(){
   }
 }
 
-function flashCounter(){
-  els.counterNum.classList.remove('flash');
-  void els.counterNum.offsetWidth;
-  els.counterNum.classList.add('flash');
+let armedRemoveId = null;
+let armedRemoveTimer = null;
+function armRemove(id){
+  armedRemoveId = id;
+  if(armedRemoveTimer) clearTimeout(armedRemoveTimer);
+  armedRemoveTimer = setTimeout(() => { armedRemoveId = null; renderCounters(); }, 2500);
+  renderCounters();
+}
+function disarmRemove(){
+  armedRemoveId = null;
+  if(armedRemoveTimer){ clearTimeout(armedRemoveTimer); armedRemoveTimer = null; }
+}
+
+function renderCounters(){
+  const active = !!current;
+  const onBreak = !!(current && current.onBreak);
+  const counts = active ? current.counts : {};
+
+  let html = settings.counters.map(c => {
+    const val = counts[c.id] || 0;
+    const minusDisabled = !active || onBreak || val === 0;
+    const plusDisabled = !active || onBreak;
+    const isArmed = armedRemoveId === c.id;
+    const removeBtn = `<button class="counter-remove${isArmed ? ' armed' : ''}" data-remove="${c.id}" type="button" title="${isArmed ? 'Tap again to confirm removal' : 'Remove counter'}">${isArmed ? '✓' : '×'}</button>`;
+    return `
+      <div class="counter-card" data-id="${c.id}">
+        ${removeBtn}
+        <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="24" spellcheck="false">
+        <div class="counter-card-num" data-key="${c.id}">${val}</div>
+        <div class="counter-card-btns">
+          <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
+          <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" ${plusDisabled ? 'disabled' : ''}>+</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  if(settings.counters.length < MAX_COUNTERS){
+    html += `
+      <button class="counter-card add-tile" id="addCounterTile" type="button" title="Add a new counter">
+        <span class="add-tile-icon">+</span>
+        <span class="add-tile-label">ADD COUNTER</span>
+      </button>`;
+  }
+
+  els.countersGrid.innerHTML = html;
+}
+
+function addCounter(){
+  if(settings.counters.length >= MAX_COUNTERS) return;
+  const id = newCounterId();
+  settings.counters.push({ id, name: 'New Counter' });
+  if(current) current.counts[id] = 0;
+  render();
+  persist();
+}
+function removeCounter(id){
+  disarmRemove();
+  settings.counters = settings.counters.filter(c => c.id !== id);
+  render();
+  persist();
+}
+function commitRename(id, value){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  c.name = value.trim().slice(0, 24) || 'Counter';
+  persist();
+}
+
+// Delegated listeners on the counters grid handle clicks/rename for cards
+// that are re-created on every render().
+els.countersGrid.addEventListener('click', (e) => {
+  const removeBtn = e.target.closest('[data-remove]');
+  if(removeBtn){
+    const id = removeBtn.dataset.remove;
+    if(armedRemoveId === id){
+      removeCounter(id);
+    } else {
+      armRemove(id);
+    }
+    return;
+  }
+  // Any other click in the grid cancels a pending removal confirmation.
+  if(armedRemoveId){ disarmRemove(); renderCounters(); }
+
+  const ctrBtn = e.target.closest('.ctr-btn');
+  if(ctrBtn){
+    if(ctrBtn.disabled) return;
+    adjustCounter(ctrBtn.dataset.key, parseInt(ctrBtn.dataset.dir, 10));
+    return;
+  }
+  const addTile = e.target.closest('#addCounterTile');
+  if(addTile){ addCounter(); }
+});
+els.countersGrid.addEventListener('change', (e) => {
+  const input = e.target.closest('[data-rename]');
+  if(input) commitRename(input.dataset.rename, input.value);
+});
+els.countersGrid.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && e.target.matches('[data-rename]')) e.target.blur();
+});
+
+function flashCounter(key){
+  const el = els.countersGrid.querySelector(`.counter-card-num[data-key="${key}"]`);
+  if(!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
 }
 
 let sharedAudioCtx = null;
@@ -630,32 +825,34 @@ function playLogSound(){
   }catch(e){ /* audio not available, ignore */ }
 }
 
-function logTask(){
+function adjustCounter(key, dir){
   if(!current || current.onBreak) return;
-  current.count += 1;
-  current.lastLogTime = new Date().toISOString();
-  els.counterStatus.textContent = 'Logged just now';
-  flashCounter();
-  playLogSound();
+  const cur = current.counts[key] || 0;
+  if(dir < 0 && cur <= 0) return;
+  current.counts[key] = cur + dir;
+  current.lastAction = { key, dir, time: new Date().toISOString() };
+  els.counterStatus.textContent = dir > 0 ? 'Logged just now' : 'Adjusted';
+  if(dir > 0){ flashCounter(key); playLogSound(); }
   render();
   persist();
 }
-els.logBtn.addEventListener('click', logTask);
 
 // Page-level shortcut: works while this tab is open and focused. Unlike the
 // desktop app, a web page can't register a truly global OS-wide hotkey.
+// Logs one of the first counter by default.
 document.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
   if((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'l'){
     e.preventDefault();
-    logTask();
+    if(settings.counters[0]) adjustCounter(settings.counters[0].id, 1);
   }
 });
 
 els.undoBtn.addEventListener('click', () => {
-  if(!current || current.count === 0) return;
-  current.count -= 1;
-  current.lastLogTime = null;
+  if(!current || !current.lastAction) return;
+  const { key, dir } = current.lastAction;
+  current.counts[key] = Math.max(0, current.counts[key] - dir);
+  current.lastAction = null;
   render();
   persist();
 });
@@ -681,10 +878,12 @@ els.endBtn.addEventListener('click', () => {
       current.breaks = current.breaks || [];
       current.breaks.push({ start: current.breakStart, end: new Date().toISOString() });
     }
-    history.push({ start: current.startTime, end: new Date().toISOString(), tasks: current.count });
+    history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, tasks: totalCount(current.counts) });
     current = null;
   } else {
-    current = { startTime: new Date().toISOString(), count: 0, lastLogTime: null, onBreak: false, breakStart: null, breaks: [] };
+    const counts = {};
+    settings.counters.forEach(c => { counts[c.id] = 0; });
+    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
   }
   render();
   persist();
@@ -699,8 +898,11 @@ els.clearBtn.addEventListener('click', () => {
 
 // ---- CSV export (client-side Blob download, no native save dialog needed) ----
 function toCsv(){
-  const rows = [['Date','Start','End','Tasks']];
-  history.forEach(h => rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), h.tasks]));
+  const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks']];
+  history.forEach(h => {
+    const c = h.counts || migrateCounts(h);
+    rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks]);
+  });
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
 els.exportBtn.addEventListener('click', () => {
@@ -722,10 +924,15 @@ els.exportBtn.addEventListener('click', () => {
 function openEditModal(index){
   editingIndex = index;
   const h = history[index];
+  const c = h.counts || migrateCounts(h);
   els.editDate.value = toDateInput(h.start);
   els.editStart.value = toTimeInput(h.start);
   els.editEnd.value = toTimeInput(h.end);
-  els.editTasks.value = h.tasks;
+  els.editCountsFields.innerHTML = settings.counters.map(ct => `
+    <div class="field">
+      <label>${escapeAttr(ct.name)}</label>
+      <input type="number" min="0" data-edit-count="${ct.id}" value="${c[ct.id] || 0}">
+    </div>`).join('');
   els.editOverlay.classList.add('show');
 }
 function closeEditModal(){
@@ -739,9 +946,12 @@ els.editSaveBtn.addEventListener('click', () => {
   const date = els.editDate.value;
   const startT = els.editStart.value;
   const endT = els.editEnd.value;
-  const tasks = Math.max(0, parseInt(els.editTasks.value, 10) || 0);
   if(!date || !startT || !endT){ alert('Please fill in date, start, and end.'); return; }
-  history[editingIndex] = { ...history[editingIndex], start: combine(date, startT), end: combine(date, endT), tasks, edited: true };
+  const counts = {};
+  els.editCountsFields.querySelectorAll('[data-edit-count]').forEach(inp => {
+    counts[inp.dataset.editCount] = Math.max(0, parseInt(inp.value, 10) || 0);
+  });
+  history[editingIndex] = { ...history[editingIndex], start: combine(date, startT), end: combine(date, endT), counts, tasks: totalCount(counts), edited: true };
   closeEditModal();
   render();
   persist();
@@ -772,7 +982,7 @@ els.toggleAutoStart.addEventListener('change', () => { settings.autoStartShift =
 els.toggleSound.addEventListener('change', () => { settings.soundEnabled = els.toggleSound.checked; persist(); });
 
 setInterval(() => {
-  if(current && current.lastLogTime) els.undoHint.textContent = timeAgoLabel(current.lastLogTime);
+  if(current && current.lastAction) els.undoHint.textContent = timeAgoLabel(current.lastAction.time);
 }, 1000);
 
 loadState();
