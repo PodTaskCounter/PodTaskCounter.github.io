@@ -7,6 +7,12 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pod Tracker">
 <style>
   :root{
     --bg: #0a0a0c;
@@ -120,17 +126,28 @@
 
   /* ---- Dynamic counter grid (up to MAX_COUNTERS cards, replaces the old single Log Task circle) ---- */
   .counters-grid{
-    display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: clamp(10px, 2vmin, 16px);
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: clamp(12px, 2.4vmin, 20px);
     padding: clamp(6px, 1.5vmin, 14px) 0;
   }
   @media (max-width: 520px){ .counters-grid{ grid-template-columns: 1fr; } }
   .counter-card{
     position:relative;
-    background: var(--panel); border:1px solid var(--border); border-radius:14px;
-    padding: clamp(14px, 2.4vmin, 20px) clamp(10px, 2vmin, 14px);
-    display:flex; flex-direction:column; align-items:center; gap: clamp(8px, 1.6vmin, 12px);
-    text-align:center;
+    perspective: 1000px;
+    height: clamp(250px, 36vmin, 320px);
   }
+  .card-flip-inner{
+    position:relative; width:100%; height:100%;
+    transform-style: preserve-3d; transition: transform .5s ease;
+  }
+  .counter-card.flipped .card-flip-inner{ transform: rotateY(180deg); }
+  .card-face{
+    position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    background: var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding: clamp(20px, 3.2vmin, 28px) clamp(14px, 2.6vmin, 18px);
+    display:flex; flex-direction:column; align-items:center; gap: clamp(10px, 2vmin, 14px);
+    text-align:center; justify-content:center;
+  }
+  .card-face-back{ transform: rotateY(180deg); }
   .counter-card-label{
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
     color: var(--muted-2); font-weight:700; background: var(--panel-2);
@@ -145,30 +162,117 @@
   }
   .counter-card-label-input:hover{ border-color:#3a3a42; }
   .counter-card-label-input:focus{ outline:none; border-color: var(--accent); color: var(--text); }
-  .counter-remove{
-    position:absolute; top:8px; right:8px; width:20px; height:20px; z-index:2;
+  .counter-actions-tr{
+    position:absolute; top:8px; right:8px; z-index:3; display:flex; flex-direction:column; gap:5px; align-items:center;
+  }
+  .counter-remove, .counter-gear{
+    width:20px; height:20px;
     border-radius:50%; border:1px solid var(--border); background: var(--panel-2);
-    color: var(--muted); font-size:12px; line-height:1; cursor:pointer; padding:0;
+    color: var(--muted); font-size:11px; line-height:1; cursor:pointer; padding:0;
     display:flex; align-items:center; justify-content:center;
     transition: color .15s, border-color .15s, background .15s, transform .1s;
   }
-  .counter-remove:hover{ color: var(--accent); border-color: var(--accent); }
-  .counter-remove:active{ transform: scale(.9); }
-  .counter-remove.armed{
-    background: var(--accent); border-color: var(--accent); color:#140900; font-weight:900;
+  .counter-remove:hover, .counter-gear:hover{ color: var(--accent); border-color: var(--accent); }
+  .counter-remove:active, .counter-gear:active{ transform: scale(.9); }
+  .counter-gear.on{ color: var(--accent); border-color: var(--accent); }
+  .counter-card{ --card-accent: var(--accent); --card-accent-dim: var(--accent-dim); }
+
+  /* ---- Long-press-to-remove: a radial fill sweeps in while held; releasing
+     early cancels, holding it through fires the removal. Replaces the old
+     tap-then-tap-again confirm pattern. ---- */
+  .counter-remove{
+    position:relative; overflow:hidden; touch-action:none; -webkit-touch-callout:none;
+    -webkit-user-select:none; user-select:none;
   }
+  .counter-remove span{ position:relative; z-index:1; pointer-events:none; }
+  .counter-remove::before{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    background: conic-gradient(var(--accent) calc(var(--hold-pct, 0) * 1%), transparent 0);
+    opacity:.9; z-index:0; pointer-events:none;
+  }
+  .counter-remove.holding{ border-color: var(--accent); color: var(--text); }
+
+  /* ---- Drag handle for swap-to-reorder: press and drag a card onto another
+     card to swap their positions (replaces the old up/down arrow buttons). ---- */
+  .counter-drag-handle{
+    position:absolute; top:6px; left:8px; right:34px; height:16px; z-index:3;
+    display:flex; align-items:center; justify-content:center; gap:2px;
+    cursor:grab; touch-action:none; -webkit-touch-callout:none;
+    color: var(--muted-2); font-size:12px; letter-spacing:3px; line-height:1;
+    opacity:.5; transition: opacity .15s, color .15s;
+  }
+  .counter-drag-handle:hover{ opacity:1; color: var(--text); }
+  .counter-drag-handle:active{ cursor:grabbing; }
+  .counter-card.drag-source{ opacity:.45; }
+  .counter-card.drag-over .card-face-front{ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim) inset; }
+  .back-face-title{
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
+    color: var(--muted-2); font-weight:700;
+  }
+  .counter-swatch-row{ display:flex; gap:9px; flex-wrap:wrap; justify-content:center; padding: 4px 0; }
+  .counter-swatch{
+    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--border);
+    cursor:pointer; padding:0; flex:none; transition: transform .1s, border-color .15s;
+  }
+  .counter-swatch:hover{ transform: scale(1.15); }
+  .counter-swatch.selected{ border-color: var(--text); box-shadow: 0 0 0 2px var(--panel); }
+  .back-face-done{
+    margin-top:6px; font-family: var(--font-mono); font-size:11px; font-weight:700;
+    color: var(--muted); background: var(--panel-2); border:1px solid var(--border);
+    border-radius:999px; padding:6px 16px; cursor:pointer;
+  }
+  .back-face-done:hover{ color: var(--text); border-color:#3a3a42; }
+  .counter-goal-row{ width:100%; display:flex; align-items:center; gap:5px; margin-top: clamp(10px, 2.2vmin, 18px); }
+  .counter-goal-input{
+    width:44px; background: var(--panel-2); border:1px solid var(--border); border-radius:6px;
+    color: var(--muted); font-size:10.5px; font-family: var(--font-mono); text-align:center; padding:3px 2px;
+  }
+  .counter-goal-input:focus{ outline:none; border-color: var(--card-accent); color: var(--text); }
+  .counter-goal-period{
+    font-family: var(--font-mono); font-size:9.5px; font-weight:700; color: var(--muted-2);
+    background: var(--panel-2); border:1px solid var(--border); border-radius:6px; padding:3px 6px; cursor:pointer;
+  }
+  .counter-goal-period:hover{ color: var(--text); border-color:#3a3a42; }
+  .counter-goal-bar-track{
+    width:100%; height:5px; border-radius:999px; background: var(--panel-2); overflow:hidden; margin-top:2px;
+  }
+  .counter-goal-bar-fill{
+    height:100%; background: var(--card-accent); border-radius:999px; transition: width .25s ease;
+  }
+  .counter-goal-label{ font-family: var(--font-mono); font-size:10px; color: var(--muted); margin-top:1px; }
+
+  .confirm-btn.confirming{ background: var(--accent) !important; color:#140900 !important; border-color: var(--accent) !important; font-weight:900; }
+
+  .toast-wrap{
+    position:fixed; left:50%; bottom:22px; transform: translateX(-50%);
+    display:flex; flex-direction:column; gap:8px; z-index:80; align-items:center; width:min(92vw, 380px);
+  }
+  .toast{
+    display:flex; align-items:center; gap:12px; background: var(--panel-2); border:1px solid var(--border);
+    border-radius:10px; padding:10px 12px 10px 16px; font-size:13px; color: var(--text);
+    box-shadow: 0 8px 30px #000000aa; width:100%;
+  }
+  .toast span.msg{ flex:1; }
+  .toast button{
+    background: none; border:1px solid var(--border); border-radius:7px; color: var(--accent);
+    font-weight:700; font-size:12.5px; padding:6px 10px; cursor:pointer; flex:none;
+  }
+  .toast button:hover{ border-color: var(--accent); }
+  .toast button.dismiss{ color: var(--muted); }
   .counter-card.add-tile{
     background: transparent; border:1.5px dashed var(--border); border-radius:14px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:8px; cursor:pointer; color: var(--muted); width:100%;
+    gap:6px; cursor:pointer; color: var(--muted); width:100%;
     transition: border-color .15s, color .15s; font-family: var(--font-body);
+    padding: clamp(12px, 1.8vmin, 16px) 10px;
+    align-self: start; height:auto; perspective:none;
   }
   .counter-card.add-tile:hover{ border-color: var(--accent); color: var(--accent); }
-  .add-tile-icon{ font-family: var(--font-display); font-size: clamp(26px, 5vmin, 38px); font-weight:900; line-height:1; }
-  .add-tile-label{ font-family: var(--font-mono); font-size:10px; letter-spacing:2px; font-weight:700; }
+  .add-tile-icon{ font-family: var(--font-display); font-size: clamp(18px, 3.2vmin, 24px); font-weight:900; line-height:1; }
+  .add-tile-label{ font-family: var(--font-mono); font-size:9px; letter-spacing:1.5px; font-weight:700; }
   .counter-card-num{
     font-family: var(--font-display); font-weight:900; color: var(--accent);
-    font-size: clamp(32px, 7vmin, 52px); line-height:1;
+    font-size: clamp(36px, 7.6vmin, 58px); line-height:1;
     text-shadow: 0 0 40px var(--accent-dim);
   }
   .counter-card-num.flash{ animation: flashPulse .32s ease; }
@@ -270,11 +374,19 @@
   body.compact .grid{ grid-template-columns: 1fr; gap:10px; max-width: 320px; margin: 0 auto; }
   body.compact .panel{ display:none; }
   body.compact .counters-grid{ grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap:6px; }
-  body.compact .counter-card{ padding:8px 4px; gap:6px; }
+  body.compact .counter-card{ height:auto; }
+  body.compact .card-face{ position:static; padding:8px 4px; gap:6px; }
+  body.compact .card-face-back{ display:none; }
   body.compact .counter-card-label-input{ font-size:8.5px; padding:4px 7px; pointer-events:none; }
   body.compact .counter-card-num{ font-size:22px; }
   body.compact .ctr-btn{ height:24px; font-size:12px; }
   body.compact .counter-remove{ display:none; }
+  body.compact .counter-gear{ display:none; }
+  body.compact .counter-drag-handle{ display:none; }
+  body.compact .counter-swatch-row{ display:none; }
+  body.compact .counter-goal-row{ display:none; }
+  body.compact .counter-goal-bar-track{ display:none; }
+  body.compact .counter-goal-label{ display:none; }
   body.compact .add-tile{ display:none; }
   body.compact .btn{ font-size:11px; padding:9px; min-width:0; }
   body.compact .note{ display:none; }
@@ -394,9 +506,11 @@
     </div>
   </div>
 
-  <div class="note">Data is saved in this browser only (localStorage) — it won't follow you to a different browser or device.<br>
-  <span class="shortcut-note">Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
+  <div class="note">Data is saved in this browser only (localStorage) — it's still there if you close the tab, quit the browser, or restart your PC, as long as you reopen this same file in the same browser on this device. It only disappears if you clear this browser's site data/cache or switch to a different browser or computer.<br>
+  <span class="shortcut-note">Hold ✕ to remove a counter · Drag ⠿⠿ to swap counter order · Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
 </div>
+
+<div class="toast-wrap" id="toastWrap"></div>
 
 <!-- Edit shift modal -->
 <div class="modal-overlay" id="editOverlay">
@@ -480,6 +594,7 @@ const DEFAULT_COUNTERS = [
   { id: 'c', name: 'TOO FAR' },
 ];
 const MAX_COUNTERS = 5;
+const COLOR_PALETTE = ['#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'];
 let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
 let editingIndex = null;
 
@@ -488,6 +603,58 @@ function escapeAttr(str){
 }
 function newCounterId(){
   return 'c' + Date.now().toString(36) + Math.floor(Math.random()*1000);
+}
+
+// ---- Toast helper (used for undo prompts etc.) ----
+function showToast(message, { actionLabel, onAction, duration = 6000 } = {}){
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  const msg = document.createElement('span');
+  msg.className = 'msg';
+  msg.textContent = message;
+  toast.appendChild(msg);
+  let timer;
+  const remove = () => { clearTimeout(timer); toast.remove(); };
+  if(actionLabel && onAction){
+    const actionBtn = document.createElement('button');
+    actionBtn.textContent = actionLabel;
+    actionBtn.addEventListener('click', () => { onAction(); remove(); });
+    toast.appendChild(actionBtn);
+  }
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className = 'dismiss';
+  dismissBtn.textContent = '✕';
+  dismissBtn.title = 'Dismiss';
+  dismissBtn.addEventListener('click', remove);
+  toast.appendChild(dismissBtn);
+  els.toastWrap.appendChild(toast);
+  timer = setTimeout(remove, duration);
+}
+
+// ---- Generic tap-to-confirm for destructive buttons (Clear history, Delete
+// shift). Mirrors the counter-remove pattern: first tap arms it and relabels
+// the button; a second tap within the window performs the action. Guards
+// against native confirm() silently failing in some mobile/webview shells. ----
+const confirmState = new Map(); // btn -> { timer, originalHTML }
+function armConfirmBtn(btn, confirmHTML, onConfirm){
+  const existing = confirmState.get(btn);
+  if(existing){
+    clearTimeout(existing.timer);
+    btn.innerHTML = existing.originalHTML;
+    btn.classList.remove('confirming');
+    confirmState.delete(btn);
+    onConfirm();
+    return;
+  }
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = confirmHTML;
+  btn.classList.add('confirming');
+  const timer = setTimeout(() => {
+    btn.innerHTML = originalHTML;
+    btn.classList.remove('confirming');
+    confirmState.delete(btn);
+  }, 2500);
+  confirmState.set(btn, { timer, originalHTML });
 }
 
 // Migrate an older shift shape (single `count`/`tasks` number, no per-type
@@ -534,6 +701,7 @@ const els = {
   editSaveBtn: document.getElementById('editSaveBtn'),
   editCancelBtn: document.getElementById('editCancelBtn'),
   editDeleteBtn: document.getElementById('editDeleteBtn'),
+  toastWrap: document.getElementById('toastWrap'),
 };
 
 function fmtTime(iso){
@@ -555,6 +723,26 @@ function startOfWeek(d){
   return dt;
 }
 function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function startOfDay(d){ const dt = new Date(d); dt.setHours(0,0,0,0); return dt; }
+
+// Sums a single counter's tally across today (or this week) — past shifts plus
+// the running current shift — so a goal set on a counter reflects real
+// progress even if the shift itself started before the period boundary.
+function counterProgress(counterId, period){
+  const now = new Date();
+  const boundary = period === 'weekly' ? startOfWeek(now) : startOfDay(now);
+  let total = 0;
+  history.forEach(h => {
+    if(new Date(h.start) >= boundary){
+      const c = h.counts || migrateCounts(h);
+      total += c[counterId] || 0;
+    }
+  });
+  if(current && new Date(current.startTime) >= boundary){
+    total += current.counts[counterId] || 0;
+  }
+  return total;
+}
 
 function loadState(){
   const data = storageGet() || {};
@@ -688,38 +876,153 @@ function render(){
   }
 }
 
-let armedRemoveId = null;
-let armedRemoveTimer = null;
-function armRemove(id){
-  armedRemoveId = id;
-  if(armedRemoveTimer) clearTimeout(armedRemoveTimer);
-  armedRemoveTimer = setTimeout(() => { armedRemoveId = null; renderCounters(); }, 2500);
+// ---- Card flip (settings back-face) with auto-close: the back face closes
+// itself after a few idle seconds, or shortly after picking a color, so it
+// never has to be tapped shut manually. ----
+const FLIP_IDLE_MS = 5000;
+const FLIP_AFTER_PICK_MS = 450;
+let flippedIds = new Set();
+let flipCloseTimers = new Map(); // id -> timeout handle
+
+function clearFlipClose(id){
+  const t = flipCloseTimers.get(id);
+  if(t){ clearTimeout(t); flipCloseTimers.delete(id); }
+}
+function scheduleFlipClose(id, delay){
+  clearFlipClose(id);
+  const t = setTimeout(() => {
+    flippedIds.delete(id);
+    flipCloseTimers.delete(id);
+    renderCounters();
+  }, delay);
+  flipCloseTimers.set(id, t);
+}
+function toggleCardFlip(id){
+  if(flippedIds.has(id)){
+    flippedIds.delete(id);
+    clearFlipClose(id);
+  } else {
+    flippedIds.add(id);
+    scheduleFlipClose(id, FLIP_IDLE_MS);
+  }
   renderCounters();
 }
-function disarmRemove(){
-  armedRemoveId = null;
-  if(armedRemoveTimer){ clearTimeout(armedRemoveTimer); armedRemoveTimer = null; }
+
+// ---- Long-press-to-remove state ----
+const HOLD_MS = 550;
+let holdTimer = null;
+let holdRafId = null;
+let holdTargetId = null;
+let holdStartTime = 0;
+
+function findRemoveBtn(id){
+  return els.countersGrid.querySelector(`[data-remove="${id}"]`);
+}
+function tickHold(){
+  const btn = findRemoveBtn(holdTargetId);
+  if(!btn){ cancelHold(); return; }
+  const pct = Math.min(100, ((performance.now() - holdStartTime) / HOLD_MS) * 100);
+  btn.style.setProperty('--hold-pct', pct.toFixed(1));
+  if(pct < 100) holdRafId = requestAnimationFrame(tickHold);
+}
+function startHold(id){
+  cancelHold();
+  holdTargetId = id;
+  holdStartTime = performance.now();
+  const btn = findRemoveBtn(id);
+  if(btn) btn.classList.add('holding');
+  holdRafId = requestAnimationFrame(tickHold);
+  holdTimer = setTimeout(() => {
+    const finishedId = holdTargetId;
+    cancelHold();
+    if(finishedId) removeCounter(finishedId);
+  }, HOLD_MS);
+}
+function cancelHold(){
+  if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+  if(holdRafId){ cancelAnimationFrame(holdRafId); holdRafId = null; }
+  if(holdTargetId){
+    const btn = findRemoveBtn(holdTargetId);
+    if(btn){ btn.classList.remove('holding'); btn.style.setProperty('--hold-pct', 0); }
+  }
+  holdTargetId = null;
+}
+
+// ---- Drag-to-swap state (pointer-based so it works on both mouse and touch) ----
+let dragState = null; // { sourceId }
+function getCardAt(x, y){
+  const el = document.elementFromPoint(x, y);
+  return el ? el.closest('.counter-card[data-id]') : null;
+}
+function clearDragHighlights(){
+  els.countersGrid.querySelectorAll('.drag-source, .drag-over').forEach(el => el.classList.remove('drag-source', 'drag-over'));
+}
+function swapCounters(idA, idB){
+  if(idA === idB) return;
+  const idxA = settings.counters.findIndex(c => c.id === idA);
+  const idxB = settings.counters.findIndex(c => c.id === idB);
+  if(idxA === -1 || idxB === -1) return;
+  [settings.counters[idxA], settings.counters[idxB]] = [settings.counters[idxB], settings.counters[idxA]];
+  render();
+  persist();
+}
+function endDrag(){
+  if(!dragState) return;
+  const { sourceId, overId } = dragState;
+  clearDragHighlights();
+  dragState = null;
+  if(overId) swapCounters(sourceId, overId);
 }
 
 function renderCounters(){
   const active = !!current;
   const onBreak = !!(current && current.onBreak);
   const counts = active ? current.counts : {};
+  const n = settings.counters.length;
 
-  let html = settings.counters.map(c => {
+  let html = settings.counters.map((c, idx) => {
     const val = counts[c.id] || 0;
     const minusDisabled = !active || onBreak || val === 0;
     const plusDisabled = !active || onBreak;
-    const isArmed = armedRemoveId === c.id;
-    const removeBtn = `<button class="counter-remove${isArmed ? ' armed' : ''}" data-remove="${c.id}" type="button" title="${isArmed ? 'Tap again to confirm removal' : 'Remove counter'}">${isArmed ? '✓' : '×'}</button>`;
+    const isFlipped = flippedIds.has(c.id);
+    const removeBtn = `<button class="counter-remove" data-remove="${c.id}" type="button" title="Hold to remove"><span>×</span></button>`;
+    const gearBtn = `<button class="counter-gear${isFlipped ? ' on' : ''}" data-gear="${c.id}" type="button" title="Counter settings">⚙</button>`;
+    const dragHandle = n > 1 ? `<div class="counter-drag-handle" data-drag="${c.id}" title="Drag onto another card to swap position">⠿⠿⠿</div>` : '';
+    const cardColor = c.color || 'var(--accent)';
+    const cardColorDim = c.color ? c.color + '33' : 'var(--accent-dim)';
+    const swatches = COLOR_PALETTE.map(hex => `<button class="counter-swatch${(c.color === hex || (!c.color && hex === COLOR_PALETTE[0])) ? ' selected' : ''}" data-swatch="${c.id}" data-color="${hex}" type="button" style="background:${hex}" title="Set accent color"></button>`).join('');
+    const goal = c.goal || 0;
+    const period = c.goalPeriod === 'weekly' ? 'weekly' : 'daily';
+    const progress = goal > 0 ? counterProgress(c.id, period) : 0;
+    const pct = goal > 0 ? Math.min(100, Math.round((progress / goal) * 100)) : 0;
+    const goalRow = `
+      <div class="counter-goal-row">
+        <button class="counter-goal-period" data-goal-period="${c.id}" type="button" title="Toggle daily/weekly goal">${period === 'weekly' ? 'WK' : 'DAY'}</button>
+        <input class="counter-goal-input" type="number" min="0" inputmode="numeric" placeholder="Goal" data-goal="${c.id}" value="${goal || ''}">
+      </div>
+      ${goal > 0 ? `
+        <div class="counter-goal-bar-track"><div class="counter-goal-bar-fill" style="width:${pct}%"></div></div>
+        <div class="counter-goal-label">${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}</div>
+      ` : ''}`;
     return `
-      <div class="counter-card" data-id="${c.id}">
-        ${removeBtn}
-        <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="24" spellcheck="false">
-        <div class="counter-card-num" data-key="${c.id}">${val}</div>
-        <div class="counter-card-btns">
-          <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
-          <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" ${plusDisabled ? 'disabled' : ''}>+</button>
+      <div class="counter-card${isFlipped ? ' flipped' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
+        <div class="counter-actions-tr">${gearBtn}${removeBtn}</div>
+        ${dragHandle}
+        <div class="card-flip-inner">
+          <div class="card-face card-face-front">
+            <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="24" spellcheck="false">
+            <div class="counter-card-num" data-key="${c.id}" style="color:${cardColor}; text-shadow:0 0 40px ${cardColorDim};">${val}</div>
+            <div class="counter-card-btns">
+              <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
+              <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" style="background:${cardColor}; border-color:${cardColor};" ${plusDisabled ? 'disabled' : ''}>+</button>
+            </div>
+            ${goalRow}
+          </div>
+          <div class="card-face card-face-back">
+            <div class="back-face-title">ACCENT COLOR</div>
+            <div class="counter-swatch-row">${swatches}</div>
+            <button class="back-face-done" data-gear="${c.id}" type="button">‹ Back</button>
+          </div>
         </div>
       </div>`;
   }).join('');
@@ -744,10 +1047,26 @@ function addCounter(){
   persist();
 }
 function removeCounter(id){
-  disarmRemove();
+  cancelHold();
+  flippedIds.delete(id);
+  clearFlipClose(id);
+  const idx = settings.counters.findIndex(c => c.id === id);
+  if(idx === -1) return;
+  const removedCounter = settings.counters[idx];
+  const removedCount = current ? current.counts[id] : undefined;
   settings.counters = settings.counters.filter(c => c.id !== id);
   render();
   persist();
+  showToast(`"${removedCounter.name}" removed`, {
+    actionLabel: 'Undo',
+    duration: 6000,
+    onAction: () => {
+      settings.counters.splice(idx, 0, removedCounter);
+      if(current && removedCount !== undefined) current.counts[id] = removedCount;
+      render();
+      persist();
+    }
+  });
 }
 function commitRename(id, value){
   const c = settings.counters.find(c => c.id === id);
@@ -755,22 +1074,75 @@ function commitRename(id, value){
   c.name = value.trim().slice(0, 24) || 'Counter';
   persist();
 }
+function setCounterColor(id, hex){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  c.color = hex;
+  render();
+  persist();
+  // Give a brief look at the picked swatch, then auto-close the flipped card.
+  if(flippedIds.has(id)) scheduleFlipClose(id, FLIP_AFTER_PICK_MS);
+}
+function setCounterGoal(id, value){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  const n = parseInt(value, 10);
+  c.goal = (isNaN(n) || n <= 0) ? 0 : n;
+  render();
+  persist();
+}
+function toggleGoalPeriod(id){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  c.goalPeriod = c.goalPeriod === 'weekly' ? 'daily' : 'weekly';
+  render();
+  persist();
+}
 
 // Delegated listeners on the counters grid handle clicks/rename for cards
 // that are re-created on every render().
-els.countersGrid.addEventListener('click', (e) => {
-  const removeBtn = e.target.closest('[data-remove]');
-  if(removeBtn){
-    const id = removeBtn.dataset.remove;
-    if(armedRemoveId === id){
-      removeCounter(id);
-    } else {
-      armRemove(id);
-    }
+els.countersGrid.addEventListener('pointerdown', (e) => {
+  const dragHandle = e.target.closest('[data-drag]');
+  if(dragHandle){
+    e.preventDefault();
+    const card = dragHandle.closest('.counter-card');
+    dragState = { sourceId: dragHandle.dataset.drag, overId: null };
+    if(card) card.classList.add('drag-source');
     return;
   }
-  // Any other click in the grid cancels a pending removal confirmation.
-  if(armedRemoveId){ disarmRemove(); renderCounters(); }
+  const removeBtn = e.target.closest('[data-remove]');
+  if(removeBtn){
+    e.preventDefault();
+    startHold(removeBtn.dataset.remove);
+    return;
+  }
+});
+els.countersGrid.addEventListener('pointermove', (e) => {
+  if(!dragState) return;
+  const overCard = getCardAt(e.clientX, e.clientY);
+  els.countersGrid.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  if(overCard && overCard.dataset.id !== dragState.sourceId){
+    overCard.classList.add('drag-over');
+    dragState.overId = overCard.dataset.id;
+  } else {
+    dragState.overId = null;
+  }
+});
+window.addEventListener('pointerup', () => { cancelHold(); endDrag(); });
+window.addEventListener('pointercancel', () => { cancelHold(); endDrag(); });
+
+els.countersGrid.addEventListener('click', (e) => {
+  // A completed long-press or drag already re-rendered the grid, so any
+  // trailing click has nothing left to act on for that element — the
+  // handlers below simply no-op in that case.
+  const gearBtn = e.target.closest('[data-gear]');
+  if(gearBtn){ toggleCardFlip(gearBtn.dataset.gear); return; }
+
+  const swatch = e.target.closest('[data-swatch]');
+  if(swatch){ setCounterColor(swatch.dataset.swatch, swatch.dataset.color); return; }
+
+  const goalPeriodBtn = e.target.closest('[data-goal-period]');
+  if(goalPeriodBtn){ toggleGoalPeriod(goalPeriodBtn.dataset.goalPeriod); return; }
 
   const ctrBtn = e.target.closest('.ctr-btn');
   if(ctrBtn){
@@ -783,10 +1155,12 @@ els.countersGrid.addEventListener('click', (e) => {
 });
 els.countersGrid.addEventListener('change', (e) => {
   const input = e.target.closest('[data-rename]');
-  if(input) commitRename(input.dataset.rename, input.value);
+  if(input){ commitRename(input.dataset.rename, input.value); return; }
+  const goalInput = e.target.closest('[data-goal]');
+  if(goalInput){ setCounterGoal(goalInput.dataset.goal, goalInput.value); }
 });
 els.countersGrid.addEventListener('keydown', (e) => {
-  if(e.key === 'Enter' && e.target.matches('[data-rename]')) e.target.blur();
+  if(e.key === 'Enter' && (e.target.matches('[data-rename]') || e.target.matches('[data-goal]'))) e.target.blur();
 });
 
 function flashCounter(key){
@@ -890,10 +1264,12 @@ els.endBtn.addEventListener('click', () => {
 });
 
 els.clearBtn.addEventListener('click', () => {
-  if(!confirm('Clear all shift history? This cannot be undone.')) return;
-  history = [];
-  render();
-  persist();
+  armConfirmBtn(els.clearBtn, '✓ Tap to confirm', () => {
+    history = [];
+    render();
+    persist();
+    showToast('Shift history cleared');
+  });
 });
 
 // ---- CSV export (client-side Blob download, no native save dialog needed) ----
@@ -938,6 +1314,8 @@ function openEditModal(index){
 function closeEditModal(){
   editingIndex = null;
   els.editOverlay.classList.remove('show');
+  const st = confirmState.get(els.editDeleteBtn);
+  if(st){ clearTimeout(st.timer); els.editDeleteBtn.innerHTML = st.originalHTML; els.editDeleteBtn.classList.remove('confirming'); confirmState.delete(els.editDeleteBtn); }
 }
 els.editCancelBtn.addEventListener('click', closeEditModal);
 els.editOverlay.addEventListener('click', (e) => { if(e.target === els.editOverlay) closeEditModal(); });
@@ -958,11 +1336,12 @@ els.editSaveBtn.addEventListener('click', () => {
 });
 els.editDeleteBtn.addEventListener('click', () => {
   if(editingIndex === null) return;
-  if(!confirm('Delete this shift entry? This cannot be undone.')) return;
-  history.splice(editingIndex, 1);
-  closeEditModal();
-  render();
-  persist();
+  armConfirmBtn(els.editDeleteBtn, '✓ Tap to confirm', () => {
+    history.splice(editingIndex, 1);
+    closeEditModal();
+    render();
+    persist();
+  });
 });
 
 // ---- Compact mode (CSS-only toggle; no native window to resize on the web) ----
@@ -984,6 +1363,28 @@ els.toggleSound.addEventListener('change', () => { settings.soundEnabled = els.t
 setInterval(() => {
   if(current && current.lastAction) els.undoHint.textContent = timeAgoLabel(current.lastAction.time);
 }, 1000);
+
+// ---- Persistence safety net ----
+// Every action already calls persist() the moment it happens, so nothing
+// is ever waiting to be saved. These extra hooks just make sure a save is
+// forced right as the page goes away too — covers closing the tab,
+// quitting the browser, or shutting down the PC/laptop, so whatever was
+// last logged is guaranteed to be on disk (in localStorage) the next time
+// this file is opened in the same browser.
+function flushPersist(){ persist(); }
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') flushPersist(); });
+window.addEventListener('pagehide', flushPersist);
+window.addEventListener('beforeunload', flushPersist);
+
+// ---- PWA: register service worker for offline support + installability.
+// Requires manifest.json and service-worker.js to sit alongside this file
+// on the same origin (both are provided separately). Silently no-ops if
+// unsupported (e.g. this sandboxed preview, or file:// in some browsers).
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => { /* offline support unavailable here; app still works online */ });
+  });
+}
 
 loadState();
 </script>
