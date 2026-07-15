@@ -281,6 +281,8 @@
     flex:1; height: clamp(32px, 5.5vmin, 40px); border-radius:999px;
     font-family: var(--font-display); font-weight:900; font-size:16px;
     cursor:pointer; transition: filter .15s, transform .08s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none; user-select:none;
   }
   .ctr-btn:active{ transform: scale(.94); }
   .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
@@ -358,7 +360,15 @@
   td.tasks{ color: var(--accent); font-weight:700; }
   tr.hist-row{ cursor:pointer; }
   tr.hist-row:hover td{ color: var(--text); }
-  td.edited-mark{ color: var(--muted-2); font-size:10px; font-family: var(--font-mono); margin-left:6px; }
+  .edited-mark{ color: var(--muted-2); font-size:10px; font-family: var(--font-mono); margin-left:6px; }
+  tr.hist-breakdown-row td{ padding: 0 0 clamp(7px, 1.6vmin, 11px); border-bottom: 1px solid #1c1c20; }
+  tr.hist-breakdown-row:hover{ cursor:pointer; }
+  .hist-breakdown{
+    display:flex; flex-wrap:wrap; gap: 5px 10px;
+    font-family: var(--font-mono); font-size:11px; color: var(--muted);
+  }
+  .hist-breakdown b{ color: var(--text); font-weight:600; }
+  .hist-breakdown.empty{ color: var(--muted-2); font-style:italic; }
   .empty-hist{ color: var(--muted-2); font-size:13px; padding: 18px 0; text-align:center; }
 
   .note{ font-size:11.5px; color: var(--muted-2); text-align:center; margin-top:18px; }
@@ -669,6 +679,21 @@ function totalCount(counts){
   return Object.values(counts || {}).reduce((s, v) => s + (v || 0), 0);
 }
 
+// Builds the "Name: count" breakdown for a history entry so a past shift's
+// per-box/card counts can be recalled later, even if a counter has since
+// been renamed or removed. Prefers the name snapshot saved with the shift;
+// falls back to the counter's current name, then a generic label.
+function shiftBreakdown(h){
+  const counts = h.counts || migrateCounts(h);
+  const names = h.counterNames || {};
+  return Object.entries(counts)
+    .filter(([, v]) => v > 0)
+    .map(([id, v]) => ({
+      name: names[id] || (settings.counters.find(c => c.id === id) || {}).name || 'Box',
+      count: v
+    }));
+}
+
 const els = {
   shiftPill: document.getElementById('shiftPill'),
   shiftDot: document.getElementById('shiftDot'),
@@ -844,8 +869,10 @@ function render(){
   els.undoBtn.disabled = !active || !current.lastAction;
   els.breakBtn.disabled = !active;
   els.breakBtn.innerHTML = onBreak ? '▶ &nbsp;Resume' : '⏸ &nbsp;Break';
-  els.endBtn.disabled = false;
-  els.endBtn.innerHTML = active ? '■ &nbsp;End Shift' : '▷ &nbsp;Start Shift';
+  if(!confirmState.has(els.endBtn)){
+    els.endBtn.disabled = false;
+    els.endBtn.innerHTML = active ? '■ &nbsp;End Shift' : '▷ &nbsp;Start Shift';
+  }
 
   els.undoHint.textContent = (active && current.lastAction) ? timeAgoLabel(current.lastAction.time) : '';
 
@@ -872,6 +899,17 @@ function render(){
         <td class="tasks">${h.tasks}</td>`;
       tr.addEventListener('click', () => openEditModal(i));
       els.histBody.appendChild(tr);
+
+      const breakdown = shiftBreakdown(h);
+      const btr = document.createElement('tr');
+      btr.className = 'hist-breakdown-row';
+      btr.title = 'Click to edit this shift';
+      const inner = breakdown.length
+        ? breakdown.map(b => `<span><b>${escapeAttr(b.name)}</b> ${b.count}</span>`).join('')
+        : `<span>No items logged</span>`;
+      btr.innerHTML = `<td colspan="4"><div class="hist-breakdown${breakdown.length ? '' : ' empty'}">${inner}</div></td>`;
+      btr.addEventListener('click', () => openEditModal(i));
+      els.histBody.appendChild(btr);
     });
   }
 }
@@ -1199,6 +1237,45 @@ function playLogSound(){
   }catch(e){ /* audio not available, ignore */ }
 }
 
+// Lightweight per-tap UI sync: updates only the number, minus-button state,
+// and goal bar on the affected card, plus the top-line stats. Avoids the
+// innerHTML rebuild that renderCounters()/render() do (which recreate every
+// card and its listeners) so a burst of fast taps stays smooth and never
+// drops or double-counts a click.
+function updateCounterCardLive(key){
+  const val = current.counts[key] || 0;
+  const numEl = els.countersGrid.querySelector(`.counter-card-num[data-key="${key}"]`);
+  if(numEl) numEl.textContent = val;
+
+  const card = els.countersGrid.querySelector(`.counter-card[data-id="${key}"]`);
+  if(card){
+    const minusBtn = card.querySelector('.ctr-btn.minus');
+    if(minusBtn) minusBtn.disabled = val === 0;
+
+    const c = settings.counters.find(c => c.id === key);
+    const goal = c && c.goal ? c.goal : 0;
+    if(goal > 0){
+      const period = c.goalPeriod === 'weekly' ? 'weekly' : 'daily';
+      const progress = counterProgress(key, period);
+      const pct = Math.min(100, Math.round((progress / goal) * 100));
+      const fill = card.querySelector('.counter-goal-bar-fill');
+      if(fill) fill.style.width = pct + '%';
+      const label = card.querySelector('.counter-goal-label');
+      if(label) label.textContent = `${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}`;
+    }
+  }
+
+  els.undoBtn.disabled = !current.lastAction;
+  els.undoHint.textContent = current.lastAction ? timeAgoLabel(current.lastAction.time) : '';
+
+  const histTotal = history.reduce((s,h) => s + h.tasks, 0);
+  const count = totalCount(current.counts);
+  els.totalLogged.textContent = histTotal + count;
+  if(!history.length) els.shiftAvg.textContent = count;
+
+  renderSummary();
+}
+
 function adjustCounter(key, dir){
   if(!current || current.onBreak) return;
   const cur = current.counts[key] || 0;
@@ -1207,7 +1284,7 @@ function adjustCounter(key, dir){
   current.lastAction = { key, dir, time: new Date().toISOString() };
   els.counterStatus.textContent = dir > 0 ? 'Logged just now' : 'Adjusted';
   if(dir > 0){ flashCounter(key); playLogSound(); }
-  render();
+  updateCounterCardLive(key);
   persist();
 }
 
@@ -1248,17 +1325,21 @@ els.breakBtn.addEventListener('click', () => {
 
 els.endBtn.addEventListener('click', () => {
   if(current){
-    if(current.onBreak){
-      current.breaks = current.breaks || [];
-      current.breaks.push({ start: current.breakStart, end: new Date().toISOString() });
-    }
-    history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, tasks: totalCount(current.counts) });
-    current = null;
-  } else {
-    const counts = {};
-    settings.counters.forEach(c => { counts[c.id] = 0; });
-    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
+    armConfirmBtn(els.endBtn, '✓ &nbsp;Confirm End', () => {
+      if(current.onBreak){
+        current.breaks = current.breaks || [];
+        current.breaks.push({ start: current.breakStart, end: new Date().toISOString() });
+      }
+      history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, counterNames: Object.fromEntries(settings.counters.map(c => [c.id, c.name])), tasks: totalCount(current.counts) });
+      current = null;
+      render();
+      persist();
+    });
+    return;
   }
+  const counts = {};
+  settings.counters.forEach(c => { counts[c.id] = 0; });
+  current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
   render();
   persist();
 });
@@ -1274,10 +1355,11 @@ els.clearBtn.addEventListener('click', () => {
 
 // ---- CSV export (client-side Blob download, no native save dialog needed) ----
 function toCsv(){
-  const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks']];
+  const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks', 'Breakdown']];
   history.forEach(h => {
     const c = h.counts || migrateCounts(h);
-    rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks]);
+    const breakdownStr = shiftBreakdown(h).map(b => `${b.name}: ${b.count}`).join('; ');
+    rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks, breakdownStr]);
   });
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
@@ -1325,11 +1407,16 @@ els.editSaveBtn.addEventListener('click', () => {
   const startT = els.editStart.value;
   const endT = els.editEnd.value;
   if(!date || !startT || !endT){ alert('Please fill in date, start, and end.'); return; }
-  const counts = {};
+  // Start from the shift's existing counts (not just the fields shown), so
+  // counts belonging to a counter that's since been removed are preserved
+  // instead of silently dropped when this edit is saved.
+  const prevEntry = history[editingIndex];
+  const counts = { ...(prevEntry.counts || migrateCounts(prevEntry)) };
   els.editCountsFields.querySelectorAll('[data-edit-count]').forEach(inp => {
     counts[inp.dataset.editCount] = Math.max(0, parseInt(inp.value, 10) || 0);
   });
-  history[editingIndex] = { ...history[editingIndex], start: combine(date, startT), end: combine(date, endT), counts, tasks: totalCount(counts), edited: true };
+  const counterNames = { ...(prevEntry.counterNames || {}), ...Object.fromEntries(settings.counters.map(c => [c.id, c.name])) };
+  history[editingIndex] = { ...prevEntry, start: combine(date, startT), end: combine(date, endT), counts, counterNames, tasks: totalCount(counts), edited: true };
   closeEditModal();
   render();
   persist();
