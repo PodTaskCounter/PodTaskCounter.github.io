@@ -8,14 +8,14 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1f1f1e">
+<meta name="theme-color" content="#2c2c2a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pod Tracker">
 <style>
   :root{
-    --bg: #1f1f1e;
+    --bg: #2c2c2a;
     --panel: #131316;
     --panel-2: #17171b;
     --border: #232328;
@@ -35,9 +35,7 @@
   html, body{ height:100%; }
 
   body{
-    background:
-      radial-gradient(circle at 15% 8%, #1a1410 0%, transparent 40%),
-      var(--bg);
+    background: var(--bg);
     color: var(--text);
     font-family: var(--font-body);
     padding: clamp(16px, 4vmin, 40px) clamp(14px, 3vmin, 32px) clamp(20px, 4vmin, 60px);
@@ -74,6 +72,19 @@
   }
   .icon-btn:hover{ color: var(--text); filter: brightness(1.2); }
   .icon-btn.on{ color: var(--accent); border-color: var(--accent); }
+
+  body.bg-white{ --bg: #ffffff; }
+  body.bg-white h1{ color:#161616; }
+  body.bg-white .note{ color:#5a5a5a; }
+  body.bg-black{ --bg: #000000; }
+
+  .bg-swatch-row{ display:flex; gap:10px; margin-top:10px; }
+  .bg-swatch{
+    width:40px; height:40px; border-radius:10px; border:2px solid var(--border);
+    cursor:pointer; padding:0; transition: border-color .15s, transform .1s;
+  }
+  .bg-swatch:hover{ transform: scale(1.05); }
+  .bg-swatch.selected{ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 
   .shift-pill{
     display:flex; align-items:center; gap:8px;
@@ -554,6 +565,17 @@
       </div>
       <label class="switch"><input type="checkbox" id="toggleSound"><span class="slider"></span></label>
     </div>
+    <div class="toggle-row" style="align-items:flex-start;">
+      <div>
+        <div class="lbl-main">Background</div>
+        <div class="lbl-sub">Choose the page background color</div>
+        <div class="bg-swatch-row" id="bgSwatchRow">
+          <button class="bg-swatch" data-bg="dark" type="button" style="background:#2c2c2a" title="Dark"></button>
+          <button class="bg-swatch" data-bg="white" type="button" style="background:#ffffff" title="White"></button>
+          <button class="bg-swatch" data-bg="black" type="button" style="background:#000000" title="Black"></button>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn primary" id="settingsCloseBtn">Done</button>
     </div>
@@ -603,7 +625,7 @@ const DEFAULT_COUNTERS = [
 ];
 const MAX_COUNTERS = 5;
 const COLOR_PALETTE = ['#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'];
-let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
+let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark', counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
 let editingIndex = null;
 
 function escapeAttr(str){
@@ -771,7 +793,7 @@ function loadState(){
   const data = storageGet() || {};
   current = data.current || null;
   history = (data.history || []).map(h => ({ ...h, counts: migrateCounts(h), tasks: h.tasks ?? totalCount(migrateCounts(h)) }));
-  settings = Object.assign({ autoStartShift: false, soundEnabled: true, compactMode: false }, data.settings || {});
+  settings = Object.assign({ autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark' }, data.settings || {});
   if(!Array.isArray(settings.counters) || settings.counters.length === 0){
     settings.counters = DEFAULT_COUNTERS.map(c => ({ ...c }));
   }
@@ -793,6 +815,7 @@ function loadState(){
   els.compactBtn.classList.toggle('on', !!settings.compactMode);
   els.toggleAutoStart.checked = !!settings.autoStartShift;
   els.toggleSound.checked = settings.soundEnabled !== false;
+  applyBackground();
 
   render();
   persist();
@@ -1104,10 +1127,15 @@ function removeCounter(id){
     }
   });
 }
-function commitRename(id, value){
+function commitRename(id, value, inputEl){
   const c = settings.counters.find(c => c.id === id);
   if(!c) return;
   c.name = value.trim().slice(0, 24) || 'Counter';
+  // Sync the field back to the sanitized name — otherwise a whitespace-only
+  // or trimmed entry leaves the box showing the raw text the user typed
+  // while the stored name is already different, until some unrelated
+  // action happens to trigger a full re-render.
+  if(inputEl) inputEl.value = c.name;
   persist();
 }
 function setCounterColor(id, hex){
@@ -1191,7 +1219,7 @@ els.countersGrid.addEventListener('click', (e) => {
 });
 els.countersGrid.addEventListener('change', (e) => {
   const input = e.target.closest('[data-rename]');
-  if(input){ commitRename(input.dataset.rename, input.value); return; }
+  if(input){ commitRename(input.dataset.rename, input.value, input); return; }
   const goalInput = e.target.closest('[data-goal]');
   if(goalInput){ setCounterGoal(goalInput.dataset.goal, goalInput.value); }
 });
@@ -1444,6 +1472,22 @@ els.settingsCloseBtn.addEventListener('click', () => els.settingsOverlay.classLi
 els.settingsOverlay.addEventListener('click', (e) => { if(e.target === els.settingsOverlay) els.settingsOverlay.classList.remove('show'); });
 els.toggleAutoStart.addEventListener('change', () => { settings.autoStartShift = els.toggleAutoStart.checked; persist(); });
 els.toggleSound.addEventListener('change', () => { settings.soundEnabled = els.toggleSound.checked; persist(); });
+
+function applyBackground(){
+  document.body.classList.remove('bg-white', 'bg-black');
+  if(settings.background === 'white') document.body.classList.add('bg-white');
+  else if(settings.background === 'black') document.body.classList.add('bg-black');
+  document.querySelectorAll('#bgSwatchRow .bg-swatch').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.bg === (settings.background || 'dark'));
+  });
+}
+document.getElementById('bgSwatchRow').addEventListener('click', (e) => {
+  const btn = e.target.closest('.bg-swatch');
+  if(!btn) return;
+  settings.background = btn.dataset.bg;
+  applyBackground();
+  persist();
+});
 
 setInterval(() => {
   if(current && current.lastAction) els.undoHint.textContent = timeAgoLabel(current.lastAction.time);
