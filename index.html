@@ -655,7 +655,7 @@
   <button class="tips-toggle-link" id="tipsToggleBtn" type="button">Show tips ↓</button>
 
   <div class="note">Data is saved in this browser only (localStorage) — it's still there if you close the tab, quit the browser, or restart your PC, as long as you reopen this same file in the same browser on this device. It only disappears if you clear this browser's site data/cache or switch to a different browser or computer.<br>
-  <span class="shortcut-note">Hold ✕ to remove a counter · Drag ⠿⠿ to swap counter order · Press 1–5 to log a counter by position · Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
+  <span class="shortcut-note">Hold ✕ to remove a counter · Drag ⠿⠿ to swap counter order · Press 1–8 to log a counter by position · Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
 </div>
 
 <section class="features" id="featuresSection" aria-label="Features">
@@ -664,7 +664,7 @@
   <div class="features-grid">
     <div class="feature-card">
       <div class="feature-icon">▦</div>
-      <h3>Up to 5 counters</h3>
+      <h3>Up to 8 counters</h3>
       <p>Track different task types side by side — each with its own tally, color, and name.</p>
     </div>
     <div class="feature-card">
@@ -720,7 +720,7 @@
     <div class="feature-card">
       <div class="feature-icon">⌨</div>
       <h3>Keyboard shortcuts</h3>
-      <p>Log counters with number keys 1–5, or a dedicated shortcut for the first one, without touching the mouse.</p>
+      <p>Log counters with number keys 1–8, or a dedicated shortcut for the first one, without touching the mouse.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">▤</div>
@@ -761,7 +761,7 @@
       </svg>
       <div class="tutorial-visual-text">
         <h3>Cards, taps, and a running tally</h3>
-        <p>Each counter is its own card — tap <b>+</b> to log a task, <b>−</b> to undo a slip of the finger. The dashed card is the "＋" tile for adding a new counter (up to 5). Your total and per-counter progress update instantly at the top of the page.</p>
+        <p>Each counter is its own card — tap <b>+</b> to log a task, <b>−</b> to undo a slip of the finger. The dashed card is the "＋" tile for adding a new counter (up to 8). Your total and per-counter progress update instantly at the top of the page.</p>
       </div>
     </div>
 
@@ -779,7 +779,7 @@
       <div class="tutorial-step">
         <div class="step-num">3</div>
         <h3>Log tasks</h3>
-        <p>Tap + on a counter each time you finish one. Use − or the Undo button if you tap by mistake. Keys 1–5 log by card position too.</p>
+        <p>Tap + on a counter each time you finish one. Use − or the Undo button if you tap by mistake. Keys 1–8 log by card position too.</p>
       </div>
       <div class="tutorial-step">
         <div class="step-num">4</div>
@@ -835,7 +835,7 @@
     </div>
 
     <div class="tutorial-shortcuts">
-      <span class="key"><kbd>1</kbd>–<kbd>5</kbd> log a counter by position</span>
+      <span class="key"><kbd>1</kbd>–<kbd>8</kbd> log a counter by position</span>
       <span class="key"><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> log the first counter</span>
       <span class="key">Hold <kbd>✕</kbd> to remove a counter</span>
       <span class="key">Drag <kbd>⠿⠿</kbd> to reorder</span>
@@ -1003,7 +1003,7 @@ const DEFAULT_COUNTERS = [
   { id: 'b', name: 'BOXES CREATED' },
   { id: 'c', name: 'TOO FAR' },
 ];
-const MAX_COUNTERS = 5;
+const MAX_COUNTERS = 8;
 const AGENT_NAMES = ['Arias', 'Bebbles', 'Blanco', 'Castigador', 'Celo', 'Dela Gante', 'Delfin', 'Educado', 'Gonzaga', 'Guillaran', 'Mijares', 'Montesclaros', 'Ravina', 'Saniel', 'Wolf'];
 const COLOR_PALETTE = ['#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'];
 let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark', counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
@@ -1893,14 +1893,14 @@ document.addEventListener('keydown', (e) => {
     if(settings.counters[0]) adjustCounter(settings.counters[0].id, 1);
     return;
   }
-  // Number keys 1-5 log a tap on the counter in that card position. Skipped
+  // Number keys 1-8 log a tap on the counter in that card position. Skipped
   // while typing anywhere (renaming a counter, a goal field, a modal input)
   // so digits type normally instead of being hijacked as shortcuts.
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = (e.target && e.target.tagName) || '';
   const typing = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
   if(typing) return;
-  if(/^[1-5]$/.test(e.key)){
+  if(/^[1-8]$/.test(e.key)){
     const counter = settings.counters[parseInt(e.key, 10) - 1];
     if(counter){
       e.preventDefault();
