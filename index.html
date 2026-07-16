@@ -43,6 +43,71 @@
 
   .wrap{ max-width: 1180px; margin: 0 auto; }
 
+  /* ---- Tutorial section (below the fold) ---- */
+  .tutorial{ max-width: 1180px; margin: clamp(40px,6vmin,64px) auto 0; padding: 0 0 40px; border-top: 1px solid var(--border); }
+  .tutorial-inner{ padding-top: clamp(28px,4vmin,40px); }
+  .tutorial h2{ font-size: clamp(20px,2.6vmin,26px); margin: 0 0 6px; }
+  .tutorial > .tutorial-inner > p.tutorial-sub{ color: var(--muted); margin: 0 0 clamp(20px,3vmin,28px); font-size: 14px; max-width: 640px; }
+  .tutorial-steps{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: clamp(10px,1.6vmin,16px); margin-bottom: clamp(24px,3.4vmin,32px); }
+  .tutorial-step{ background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .tutorial-step .step-num{ width:26px; height:26px; border-radius:50%; background: var(--panel-2); border:1px solid var(--border); color: var(--accent); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .tutorial-step h3{ font-size:14px; margin:0 0 4px; }
+  .tutorial-step p{ font-size:13px; color: var(--muted); margin:0; line-height:1.5; }
+  .tutorial-visual{ background: var(--panel-2); border:1px solid var(--border); border-radius: 16px; padding: clamp(18px,3vmin,28px); margin-bottom: clamp(24px,3.4vmin,32px); display:flex; flex-wrap:wrap; align-items:center; gap: clamp(14px,3vmin,26px); }
+  .tutorial-visual svg{ flex: 0 0 auto; width: min(260px, 40vw); height: auto; }
+  .tutorial-visual .tutorial-visual-text{ flex: 1 1 260px; min-width: 220px; }
+  .tutorial-visual .tutorial-visual-text h3{ font-size:15px; margin:0 0 6px; }
+  .tutorial-visual .tutorial-visual-text p{ font-size:13px; color: var(--muted); margin:0; line-height:1.6; }
+  .tutorial-faq{ display:grid; gap:10px; }
+  .tutorial-faq details{ background: var(--panel); border:1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  .tutorial-faq summary{ cursor:pointer; font-size:14px; font-weight:600; list-style:none; display:flex; align-items:center; justify-content:space-between; }
+  .tutorial-faq summary::-webkit-details-marker{ display:none; }
+  .tutorial-faq summary::after{ content:'+'; color: var(--muted); font-weight:400; font-size:18px; transition: transform .15s; }
+  .tutorial-faq details[open] summary::after{ transform: rotate(45deg); }
+  .tutorial-faq p{ font-size:13px; color: var(--muted); margin: 8px 0 0; line-height:1.6; }
+  .tutorial-shortcuts{ display:flex; flex-wrap:wrap; gap:8px; margin-top: clamp(20px,3vmin,28px); }
+  .tutorial-shortcuts .key{ background: var(--panel); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:12px; color: var(--text); display:flex; align-items:center; gap:8px; }
+  .tutorial-shortcuts .key kbd{ background: var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:2px 6px; font-size:11px; color: var(--accent); font-family: inherit; }
+  body.compact .tutorial{ display:none; }
+  @media (max-width: 640px){ .tutorial-visual{ flex-direction:column; } .tutorial-visual svg{ width: min(320px, 80vw); } }
+
+  /* ---- Features section (below the fold) ---- */
+  .features{ max-width: 1180px; margin: clamp(40px,6vmin,64px) auto 0; padding: 0; }
+  .features h2{ font-size: clamp(20px,2.6vmin,26px); margin: 0 0 6px; }
+  .features > p.features-sub{ color: var(--muted); margin: 0 0 clamp(20px,3vmin,28px); font-size: 14px; max-width: 640px; }
+  .features-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: clamp(10px,1.6vmin,16px); }
+  .feature-card{ background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .feature-card .feature-icon{ width:34px; height:34px; border-radius:10px; background: var(--panel-2); border:1px solid var(--border); color: var(--accent); font-size:16px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .feature-card h3{ font-size:14px; margin:0 0 4px; }
+  .feature-card p{ font-size:13px; color: var(--muted); margin:0; line-height:1.5; }
+  body.compact .features{ display:none; }
+
+  .back-to-top{
+    position: fixed; right: clamp(14px,3vmin,28px); bottom: clamp(14px,3vmin,28px);
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+    background: var(--panel); color: var(--accent); font-size:18px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 20px #00000055; opacity:0; pointer-events:none;
+    transform: translateY(8px); transition: opacity .18s, transform .18s;
+    z-index: 40;
+  }
+  .back-to-top.show{ opacity:1; pointer-events:auto; transform: translateY(0); }
+  .back-to-top:hover{ border-color: var(--accent); }
+
+  .tour-banner{
+    display:none; align-items:center; justify-content:space-between; gap:12px;
+    background: var(--panel); border:1px solid var(--border); border-radius: 12px;
+    padding: 10px 14px; margin-bottom: 14px; font-size:13px; color: var(--text);
+  }
+  .tour-banner.show{ display:flex; }
+  .tour-banner a{ color: var(--accent); text-decoration:none; font-weight:600; }
+  .tour-banner a:hover{ text-decoration:underline; }
+  .tour-banner button{
+    background:none; border:none; color: var(--muted); font-size:16px; cursor:pointer;
+    padding:2px 4px; line-height:1;
+  }
+  .tour-banner button:hover{ color: var(--text); }
+
   .storage-banner{
     display:none; align-items:center; gap:10px;
     background: #3a2a12; border:1px solid #6b4a1a; color:#ffd699;
@@ -78,6 +143,21 @@
   body.bg-white .note{ color:#5a5a5a; }
   body.bg-black{ --bg: #000000; }
 
+  body.theme-light{
+    --bg: #f3f3f0;
+    --panel: #ffffff;
+    --panel-2: #f4f4f2;
+    --border: #e2e2df;
+    --text: #17171a;
+    --muted: #6b6b70;
+    --muted-2: #9a9a9f;
+  }
+  body.theme-light td,
+  body.theme-light tr.hist-breakdown-row td{ border-bottom-color: var(--border); }
+  body.theme-light .note{ border-top-color: var(--border); }
+  body.theme-light .shift-pill:hover,
+  body.theme-light .counter-card-label-input:hover{ border-color: var(--muted-2); }
+
   .bg-swatch-row{ display:flex; gap:10px; margin-top:10px; }
   .bg-swatch{
     width:40px; height:40px; border-radius:10px; border:2px solid var(--border);
@@ -100,6 +180,12 @@
   .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
   .dot.active{ box-shadow: 0 0 8px currentColor; animation: pulse 1.6s infinite; }
   @keyframes pulse{ 50%{ opacity:.3 } }
+  .shift-timer{
+    font-family: var(--font-mono); font-size:12.5px; font-weight:700;
+    letter-spacing:0.5px; color:inherit; opacity:.85;
+    border-left:1px solid var(--border); padding-left:8px; margin-left:2px;
+  }
+  .shift-pill.idle .shift-timer{ display:none; }
 
   .grid{
     display:grid; grid-template-columns: 1fr 400px; gap: clamp(14px, 3vmin, 28px);
@@ -174,16 +260,17 @@
   .counter-actions-tr{
     position:absolute; top:8px; right:8px; z-index:3; display:flex; flex-direction:column; gap:5px; align-items:center;
   }
-  .counter-remove, .counter-gear{
+  .counter-remove, .counter-gear, .counter-duplicate{
     width:20px; height:20px;
     border-radius:50%; border:1px solid var(--border); background: var(--panel-2);
     color: var(--muted); font-size:11px; line-height:1; cursor:pointer; padding:0;
     display:flex; align-items:center; justify-content:center;
     transition: color .15s, border-color .15s, background .15s, transform .1s;
   }
-  .counter-remove:hover, .counter-gear:hover{ color: var(--accent); border-color: var(--accent); }
-  .counter-remove:active, .counter-gear:active{ transform: scale(.9); }
+  .counter-remove:hover, .counter-gear:hover, .counter-duplicate:not(:disabled):hover{ color: var(--accent); border-color: var(--accent); }
+  .counter-remove:active, .counter-gear:active, .counter-duplicate:not(:disabled):active{ transform: scale(.9); }
   .counter-gear.on{ color: var(--accent); border-color: var(--accent); }
+  .counter-duplicate:disabled{ opacity:.3; cursor:not-allowed; }
   .counter-card{ --card-accent: var(--accent); --card-accent-dim: var(--accent-dim); }
 
   /* ---- Long-press-to-remove: a radial fill sweeps in while held; releasing
@@ -212,7 +299,9 @@
   }
   .counter-drag-handle:hover{ opacity:1; color: var(--text); }
   .counter-drag-handle:active{ cursor:grabbing; }
-  .counter-card.drag-source{ opacity:.45; }
+  .counter-card{ transition: transform .2s ease, opacity .2s ease; }
+  .counter-card.drag-source{ opacity:.45; transform: scale(.95); }
+  .card-face-front{ transition: border-color .15s, box-shadow .15s; }
   .counter-card.drag-over .card-face-front{ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim) inset; }
   .back-face-title{
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
@@ -355,6 +444,12 @@
   }
   .clear-btn:hover{ border-color: var(--accent); }
   .clear-btn.export{ color: var(--good); }
+  .hist-filter-select{
+    font-size:12.5px; font-weight:700; color: var(--text);
+    background: var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    padding: 7px 10px; cursor:pointer; font-family: inherit;
+  }
+  .hist-filter-select:hover{ border-color: var(--accent); }
 
   table{ width:100%; border-collapse: collapse; }
   th{
@@ -401,6 +496,7 @@
   body.compact .ctr-btn{ height:24px; font-size:12px; }
   body.compact .counter-remove{ display:none; }
   body.compact .counter-gear{ display:none; }
+  body.compact .counter-duplicate{ display:none; }
   body.compact .counter-drag-handle{ display:none; }
   body.compact .counter-swatch-row{ display:none; }
   body.compact .counter-goal-row{ display:none; }
@@ -409,6 +505,10 @@
   body.compact .add-tile{ display:none; }
   body.compact .btn{ font-size:11px; padding:9px; min-width:0; }
   body.compact .note{ display:none; }
+  .tips-toggle-link{ display:none; background:none; border:none; color: var(--muted); font-size:12px; cursor:pointer; margin: 12px auto 0; text-decoration:underline; text-align:center; width:100%; }
+  body.compact .tips-toggle-link{ display:block; }
+  body.compact.tips-visible .tutorial{ display:block; }
+  body.compact.tips-visible .features{ display:block; }
 
   /* ---- Modal (settings + edit shift) ---- */
   .modal-overlay{
@@ -419,14 +519,32 @@
   .modal{
     background: var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:22px; width: 320px; max-width: 90vw;
+    max-height: 85vh; overflow-y: auto;
   }
   .modal h3{ font-family: var(--font-display); font-size:16px; margin-bottom:16px; }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:11.5px; color: var(--muted); margin-bottom:6px; font-weight:600; }
-  .field input[type="date"], .field input[type="time"], .field input[type="number"]{
+  .field input[type="date"], .field input[type="time"], .field input[type="number"], .field input[type="text"], .field select{
     width:100%; background: var(--panel-2); border:1px solid var(--border); border-radius:8px;
     color: var(--text); padding:9px 10px; font-size:13px; font-family: var(--font-mono);
   }
+  .field select{ cursor:pointer; }
+  .welcome-modal{ text-align:center; }
+  .welcome-modal .welcome-greeting{
+    font-family: var(--font-display); font-size: clamp(22px,4vmin,30px);
+    margin-bottom:6px;
+  }
+  .welcome-modal .welcome-sub{ color: var(--muted); font-size:13px; margin-bottom:20px; }
+  .welcome-modal .field{ text-align:left; }
+  .welcome-modal .modal-actions{ justify-content:center; }
+  .welcome-modal .modal-actions .btn{ flex:1; }
+  .agent-badge{
+    font-family: var(--font-mono); font-size:11px; color: var(--muted);
+    border:1px solid var(--border); border-radius:999px; padding:5px 12px;
+    background: var(--panel); cursor:pointer; transition: border-color .15s, color .15s;
+    display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+  }
+  .agent-badge:hover{ border-color: var(--accent); color: var(--text); }
   .toggle-row{
     display:flex; align-items:center; justify-content:space-between;
     padding: 10px 0; border-bottom: 1px solid #1c1c20;
@@ -457,18 +575,24 @@
     ⚠ Your browser is blocking local storage in this preview, so data won't persist between reloads here. Download this HTML file and open it directly in a browser to get full persistence.
   </div>
 
+  <div class="tour-banner" id="tourBanner">
+    <span>New here? <a href="#featuresSection">Scroll down for a quick tour ↓</a></span>
+    <button type="button" id="tourBannerDismiss" title="Dismiss" aria-label="Dismiss">×</button>
+  </div>
+
   <div class="header">
     <div>
       <div class="eyebrow">POD 2 COUNTER</div>
       <h1>Pod Task Tracker</h1>
+      <button class="agent-badge" id="agentBadge" type="button" title="Change agent"><span>👤</span><span id="agentBadgeText">Set agent name</span></button>
     </div>
     <div class="header-right">
-      <a class="btn primary" id="downloadExeBtn" href="https://github.com/Plundering-Puma/pod-task-tracker/releases/download/v1.0/Pod.Task.Tracker.Setup.1.0.0.exe" style="flex:none; text-decoration:none; padding:8px 16px; font-size:12.5px;" title="Download the Windows desktop app">⬇ Download App</a>
       <button class="icon-btn" id="compactBtn" title="Toggle compact mode">⤢</button>
       <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
       <div class="shift-pill idle" id="shiftPill">
         <span class="dot" id="shiftDot"></span>
         <span id="shiftPillText">Loading…</span>
+        <span class="shift-timer" id="shiftTimer">00:00:00</span>
       </div>
     </div>
   </div>
@@ -510,6 +634,9 @@
       <div class="hist-head">
         <div class="hist-title">🕐 Shift History</div>
         <div class="hist-actions">
+          <select class="hist-filter-select" id="histAgentFilter" title="Filter by agent">
+            <option value="">All agents</option>
+          </select>
           <button class="clear-btn export" id="exportBtn">⬇ CSV</button>
           <button class="clear-btn" id="clearBtn">🗑 Clear</button>
         </div>
@@ -525,22 +652,242 @@
     </div>
   </div>
 
+  <button class="tips-toggle-link" id="tipsToggleBtn" type="button">Show tips ↓</button>
+
   <div class="note">Data is saved in this browser only (localStorage) — it's still there if you close the tab, quit the browser, or restart your PC, as long as you reopen this same file in the same browser on this device. It only disappears if you clear this browser's site data/cache or switch to a different browser or computer.<br>
-  <span class="shortcut-note">Hold ✕ to remove a counter · Drag ⠿⠿ to swap counter order · Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
+  <span class="shortcut-note">Hold ✕ to remove a counter · Drag ⠿⠿ to swap counter order · Press 1–5 to log a counter by position · Ctrl/Cmd+Shift+L logs a task while this tab is open and focused.</span></div>
 </div>
 
+<section class="features" id="featuresSection" aria-label="Features">
+  <h2>Features</h2>
+  <p class="features-sub">Everything Pod Task Tracker can do, at a glance.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">▦</div>
+      <h3>Up to 5 counters</h3>
+      <p>Track different task types side by side — each with its own tally, color, and name.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👤</div>
+      <h3>Named shifts</h3>
+      <p>Pick your name once — from the roster or your own — and every shift you log is tagged with it automatically until you change it.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">↺</div>
+      <h3>One-tap undo</h3>
+      <p>Every log is instantly undoable, and a toast lets you undo removals and other actions too.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◎</div>
+      <h3>Goals & progress</h3>
+      <p>Set a daily, weekly, or monthly target per counter and watch live progress toward it.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⠿</div>
+      <h3>Drag to reorder</h3>
+      <p>Drag a counter by its handle onto another to swap their positions and match your workflow.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⧉</div>
+      <h3>Duplicate counters</h3>
+      <p>Clone a counter's name, color, and goal setup in one tap instead of rebuilding it from scratch.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✕</div>
+      <h3>Hold-to-remove</h3>
+      <p>A deliberate long-press deletes a counter, so a stray tap can't wipe one out by accident.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏸</div>
+      <h3>Break tracking</h3>
+      <p>Pause logging on break, then review or adjust the break length later from shift history.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🕐</div>
+      <h3>Editable shift history</h3>
+      <p>Every shift is logged automatically — click any row to fix counts, times, or break duration.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Filter history by agent</h3>
+      <p>Once more than one name shows up in the history, a dropdown appears above the table so anyone can pull up just their own shifts.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⬇</div>
+      <h3>CSV export by date range</h3>
+      <p>Export any range of shifts to CSV, complete with per-counter breakdowns and the agent's name, for reporting elsewhere.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⌨</div>
+      <h3>Keyboard shortcuts</h3>
+      <p>Log counters with number keys 1–5, or a dedicated shortcut for the first one, without touching the mouse.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">▤</div>
+      <h3>Compact mode</h3>
+      <p>Switch to a denser single-column layout when you just need fast tapping, not the full dashboard.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚿</div>
+      <h3>Private, local-only data</h3>
+      <p>Everything's saved in this browser's storage on this device — no account, no server, no sign-up.</p>
+    </div>
+  </div>
+</section>
+
+<section class="tutorial" aria-label="How to use Pod Task Tracker">
+  <div class="tutorial-inner">
+    <h2>How it works</h2>
+    <p class="tutorial-sub">A quick walkthrough of the basics — start a shift, log tasks on your counters, and review your history later.</p>
+
+    <div class="tutorial-visual">
+      <svg viewBox="0 0 260 170" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="252" height="162" rx="16" fill="var(--panel)" stroke="var(--border)"/>
+        <rect x="20" y="20" width="70" height="70" rx="12" fill="var(--panel-2)" stroke="var(--border)"/>
+        <circle cx="55" cy="45" r="4" fill="var(--accent)"/>
+        <rect x="30" y="60" width="50" height="8" rx="4" fill="var(--border)"/>
+        <rect x="100" y="20" width="70" height="70" rx="12" fill="var(--panel-2)" stroke="var(--border)"/>
+        <circle cx="135" cy="45" r="4" fill="var(--muted-2)"/>
+        <rect x="110" y="60" width="50" height="8" rx="4" fill="var(--border)"/>
+        <rect x="180" y="20" width="60" height="70" rx="12" fill="var(--panel-2)" stroke="var(--border)" stroke-dasharray="4 4"/>
+        <line x1="210" y1="42" x2="210" y2="68" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="197" y1="55" x2="223" y2="55" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/>
+        <rect x="20" y="104" width="220" height="46" rx="10" fill="var(--panel-2)" stroke="var(--border)"/>
+        <circle cx="42" cy="127" r="10" fill="var(--accent)"/>
+        <path d="M38 127 l3 4 l7 -8" stroke="#1a1a1a" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="62" y="120" width="90" height="8" rx="4" fill="var(--border)"/>
+        <rect x="62" y="132" width="60" height="6" rx="3" fill="var(--border)"/>
+        <rect x="170" y="116" width="50" height="22" rx="8" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      </svg>
+      <div class="tutorial-visual-text">
+        <h3>Cards, taps, and a running tally</h3>
+        <p>Each counter is its own card — tap <b>+</b> to log a task, <b>−</b> to undo a slip of the finger. The dashed card is the "＋" tile for adding a new counter (up to 5). Your total and per-counter progress update instantly at the top of the page.</p>
+      </div>
+    </div>
+
+    <div class="tutorial-steps">
+      <div class="tutorial-step">
+        <div class="step-num">1</div>
+        <h3>Set your name</h3>
+        <p>The first time you open the tracker, pick your name from the list (or add your own). It's shown in the badge up top and can be changed there any time.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">2</div>
+        <h3>Start a shift</h3>
+        <p>Tap "Start Shift" to begin tracking — you'll be asked for your name first if you haven't set one. Everything you log gets grouped under that shift, tagged with your name, until you end it.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">3</div>
+        <h3>Log tasks</h3>
+        <p>Tap + on a counter each time you finish one. Use − or the Undo button if you tap by mistake. Keys 1–5 log by card position too.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">4</div>
+        <h3>Take a break</h3>
+        <p>Tap Break to pause — logging is disabled until you resume. Break time is saved with the shift and editable later.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">5</div>
+        <h3>Customize counters</h3>
+        <p>Tap the gear on a card to rename it, set a color and a daily/weekly/monthly goal. Hold ✕ to remove a counter, or use ⧉ to duplicate one.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">6</div>
+        <h3>Reorder counters</h3>
+        <p>Drag a card by its ⠿⠿ handle onto another to swap their positions — arrange them however fits your workflow.</p>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-num">7</div>
+        <h3>End & review</h3>
+        <p>Tap End Shift (twice, to confirm) to save it to history. Click any row to edit counts, times, or break duration, filter the table by name, or export a date range to CSV.</p>
+      </div>
+    </div>
+
+    <div class="tutorial-faq">
+      <details>
+        <summary>Where is my data stored?</summary>
+        <p>Everything is saved in this browser's local storage on this device — nothing is sent anywhere. It stays put across closes and restarts, but won't follow you to a different browser or computer, and clearing this browser's site data will erase it.</p>
+      </details>
+      <details>
+        <summary>Can I fix a shift after it's ended?</summary>
+        <p>Yes — click any row in Shift History to edit its date, start/end time, break duration, or the counts for each counter. You can also delete a shift entirely from there.</p>
+      </details>
+      <details>
+        <summary>What happens if I remove a counter mid-shift?</summary>
+        <p>The counter disappears from the grid, but any tasks already logged on it still count toward the shift's total — that work isn't lost, it just won't show as its own line anymore. Removing is undoable right after you do it, via the toast that appears.</p>
+      </details>
+      <details>
+        <summary>How do goals work?</summary>
+        <p>Set a daily, weekly, or monthly target on a counter (via its gear icon) and the card shows live progress toward it, resetting automatically at the start of each new period.</p>
+      </details>
+      <details>
+        <summary>Do I have to pick a name?</summary>
+        <p>Yes — "Start Shift" is blocked until a name is set, so every shift in the history is attributed to someone. Pick from the roster or add your own via "Other…".</p>
+      </details>
+      <details>
+        <summary>What happens if I change my name mid-shift?</summary>
+        <p>It only applies going forward. The shift already in progress stays logged under whoever started it — you'll see a confirmation of that when you make the change — and the new name takes effect from your next shift on.</p>
+      </details>
+      <details>
+        <summary>Can I see just my own shifts?</summary>
+        <p>Yes — once the history has more than one name in it, a filter dropdown appears above Shift History so you can narrow the table down to a single agent. CSV export is still date-range based and includes everyone in that range, with an Agent column in the file.</p>
+      </details>
+    </div>
+
+    <div class="tutorial-shortcuts">
+      <span class="key"><kbd>1</kbd>–<kbd>5</kbd> log a counter by position</span>
+      <span class="key"><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> log the first counter</span>
+      <span class="key">Hold <kbd>✕</kbd> to remove a counter</span>
+      <span class="key">Drag <kbd>⠿⠿</kbd> to reorder</span>
+    </div>
+  </div>
+</section>
+
 <div class="toast-wrap" id="toastWrap"></div>
+<button class="back-to-top" id="backToTopBtn" type="button" title="Back to top" aria-label="Back to top">↑</button>
 
 <!-- Edit shift modal -->
+<div class="modal-overlay" id="welcomeOverlay">
+  <div class="modal welcome-modal">
+    <div id="welcomePickStep">
+      <div class="welcome-greeting">Hello Agent! 👋</div>
+      <div class="welcome-sub">Let's get you set up — who's logging tasks?</div>
+      <div class="field">
+        <label>Agent name</label>
+        <select id="welcomeAgentSelect">
+          <option value="" disabled selected>Choose your name…</option>
+        </select>
+      </div>
+      <div class="field" id="welcomeOtherField" style="display:none;">
+        <label>Your name</label>
+        <input type="text" id="welcomeOtherInput" maxlength="40" placeholder="Type your name" autocomplete="off">
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="welcomeConfirmBtn">Continue</button>
+      </div>
+    </div>
+    <div id="welcomeConfirmStep" style="display:none;">
+      <div class="welcome-greeting">Just checking 👀</div>
+      <div class="welcome-sub">You selected <b id="welcomeConfirmName"></b> — is that you?</div>
+      <div class="modal-actions">
+        <button class="btn" id="welcomeConfirmBackBtn">Go back</button>
+        <button class="btn primary" id="welcomeConfirmYesBtn">Yes, that's me</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="editOverlay">
   <div class="modal">
     <h3>Edit Shift</h3>
     <div class="field"><label>Date</label><input type="date" id="editDate"></div>
     <div class="field"><label>Start Time</label><input type="time" id="editStart"></div>
     <div class="field"><label>End Time</label><input type="time" id="editEnd"></div>
+    <div class="field"><label>Break (minutes)</label><input type="number" min="0" id="editBreakMinutes"></div>
     <div id="editCountsFields"></div>
     <div class="modal-actions">
       <button class="btn danger" id="editDeleteBtn">Delete</button>
+      <button class="btn" id="editPrintBtn" type="button">Print</button>
       <button class="btn" id="editCancelBtn">Cancel</button>
       <button class="btn primary" id="editSaveBtn">Save</button>
     </div>
@@ -565,6 +912,13 @@
       </div>
       <label class="switch"><input type="checkbox" id="toggleSound"><span class="slider"></span></label>
     </div>
+    <div class="toggle-row">
+      <div>
+        <div class="lbl-main">Light theme</div>
+        <div class="lbl-sub">Switch to a light color scheme throughout</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="toggleLightTheme"><span class="slider"></span></label>
+    </div>
     <div class="toggle-row" style="align-items:flex-start;">
       <div>
         <div class="lbl-main">Background</div>
@@ -576,8 +930,29 @@
         </div>
       </div>
     </div>
+    <div class="toggle-row" style="align-items:flex-start;">
+      <div>
+        <div class="lbl-main">Import CSV</div>
+        <div class="lbl-sub">Restore shifts from a CSV previously exported from here</div>
+        <input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none;">
+        <button class="btn" id="importCsvBtn" type="button" style="margin-top:8px;">Choose CSV file…</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn primary" id="settingsCloseBtn">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export CSV date-range modal -->
+<div class="modal-overlay" id="exportOverlay">
+  <div class="modal">
+    <h3>Export CSV</h3>
+    <div class="field"><label>From</label><input type="date" id="exportFrom"></div>
+    <div class="field"><label>To</label><input type="date" id="exportTo"></div>
+    <div class="modal-actions">
+      <button class="btn" id="exportCancelBtn">Cancel</button>
+      <button class="btn primary" id="exportConfirmBtn">Export</button>
     </div>
   </div>
 </div>
@@ -618,12 +993,18 @@ function storageSet(data){
 
 let current = null;   // { startTime, counts: {<counterId>: n, ...}, lastAction: {key,dir,time}, onBreak, breakStart, breaks: [{start,end}] }
 let history = [];     // [{ start, end, counts: {<counterId>: n, ...}, tasks, edited? }]
+// Per-agent parked shifts. When you switch to another name mid-shift, your
+// in-progress shift is auto-parked here (on an automatic break) instead of
+// being ended, and swapped back in — counts, timer and all — the moment you
+// switch back. Keyed by agent name.
+let parkedShifts = {};
 const DEFAULT_COUNTERS = [
   { id: 'a', name: 'NUMBER OF TASK' },
   { id: 'b', name: 'BOXES CREATED' },
   { id: 'c', name: 'TOO FAR' },
 ];
 const MAX_COUNTERS = 5;
+const AGENT_NAMES = ['Arias', 'Bebbles', 'Blanco', 'Castigador', 'Celo', 'Dela Gante', 'Delfin', 'Educado', 'Gonzaga', 'Guillaran', 'Mijares', 'Montesclaros', 'Ravina', 'Saniel', 'Wolf'];
 const COLOR_PALETTE = ['#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'];
 let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark', counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
 let editingIndex = null;
@@ -714,10 +1095,21 @@ function shiftBreakdown(h){
     }));
 }
 
+// Total break time for a shift, in minutes. Uses the manual override saved
+// via the edit modal when present; otherwise sums the recorded break
+// start/end pairs from when the shift actually ran.
+function totalBreakMinutes(h){
+  if(h.breakMinutes !== undefined) return h.breakMinutes;
+  const breaks = h.breaks || [];
+  const ms = breaks.reduce((s, b) => s + (new Date(b.end) - new Date(b.start)), 0);
+  return Math.round(ms / 60000);
+}
+
 const els = {
   shiftPill: document.getElementById('shiftPill'),
   shiftDot: document.getElementById('shiftDot'),
   shiftPillText: document.getElementById('shiftPillText'),
+  shiftTimer: document.getElementById('shiftTimer'),
   startedBadge: document.getElementById('startedBadge'),
   counterStatus: document.getElementById('counterStatus'),
   countersGrid: document.getElementById('countersGrid'),
@@ -728,6 +1120,7 @@ const els = {
   totalLogged: document.getElementById('totalLogged'),
   shiftAvg: document.getElementById('shiftAvg'),
   histBody: document.getElementById('histBody'),
+  histAgentFilter: document.getElementById('histAgentFilter'),
   emptyHist: document.getElementById('emptyHist'),
   clearBtn: document.getElementById('clearBtn'),
   exportBtn: document.getElementById('exportBtn'),
@@ -738,19 +1131,57 @@ const els = {
   settingsCloseBtn: document.getElementById('settingsCloseBtn'),
   toggleAutoStart: document.getElementById('toggleAutoStart'),
   toggleSound: document.getElementById('toggleSound'),
+  toggleLightTheme: document.getElementById('toggleLightTheme'),
+  importCsvBtn: document.getElementById('importCsvBtn'),
+  importCsvInput: document.getElementById('importCsvInput'),
   editOverlay: document.getElementById('editOverlay'),
   editDate: document.getElementById('editDate'),
   editStart: document.getElementById('editStart'),
   editEnd: document.getElementById('editEnd'),
+  editBreakMinutes: document.getElementById('editBreakMinutes'),
   editCountsFields: document.getElementById('editCountsFields'),
   editSaveBtn: document.getElementById('editSaveBtn'),
+  editPrintBtn: document.getElementById('editPrintBtn'),
   editCancelBtn: document.getElementById('editCancelBtn'),
   editDeleteBtn: document.getElementById('editDeleteBtn'),
   toastWrap: document.getElementById('toastWrap'),
+  exportOverlay: document.getElementById('exportOverlay'),
+  exportFrom: document.getElementById('exportFrom'),
+  exportTo: document.getElementById('exportTo'),
+  exportConfirmBtn: document.getElementById('exportConfirmBtn'),
+  exportCancelBtn: document.getElementById('exportCancelBtn'),
+  backToTopBtn: document.getElementById('backToTopBtn'),
+  tourBanner: document.getElementById('tourBanner'),
+  tourBannerDismiss: document.getElementById('tourBannerDismiss'),
+  tipsToggleBtn: document.getElementById('tipsToggleBtn'),
+  welcomeOverlay: document.getElementById('welcomeOverlay'),
+  welcomePickStep: document.getElementById('welcomePickStep'),
+  welcomeConfirmStep: document.getElementById('welcomeConfirmStep'),
+  welcomeConfirmName: document.getElementById('welcomeConfirmName'),
+  welcomeConfirmBackBtn: document.getElementById('welcomeConfirmBackBtn'),
+  welcomeConfirmYesBtn: document.getElementById('welcomeConfirmYesBtn'),
+  welcomeAgentSelect: document.getElementById('welcomeAgentSelect'),
+  welcomeOtherField: document.getElementById('welcomeOtherField'),
+  welcomeOtherInput: document.getElementById('welcomeOtherInput'),
+  welcomeConfirmBtn: document.getElementById('welcomeConfirmBtn'),
+  agentBadge: document.getElementById('agentBadge'),
+  agentBadgeText: document.getElementById('agentBadgeText'),
 };
 
 function fmtTime(iso){
   return new Date(iso).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+}
+// Formats a duration in ms as HH:MM:SS (always 2-digit fields, hours can
+// grow past 24 rather than wrapping — a shift is never actually that long,
+// but this keeps the display honest instead of silently rolling over).
+function formatDuration(ms){
+  if(!Number.isFinite(ms)) return '00:00:00';
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 function fmtDate(iso){
   return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'2-digit', year:'numeric' });
@@ -773,6 +1204,35 @@ function startOfDay(d){ const dt = new Date(d); dt.setHours(0,0,0,0); return dt;
 // Sums a single counter's tally across today (or this week) — past shifts plus
 // the running current shift — so a goal set on a counter reflects real
 // progress even if the shift itself started before the period boundary.
+// Consecutive completed goal periods (days or weeks) hitting the goal,
+// counting backward from the most recently finished period, plus the
+// current in-progress one if it's already met.
+function counterStreak(counterId, goal, period){
+  if(!goal) return 0;
+  const dayMs = 24 * 3600 * 1000;
+  const keyOf = period === 'weekly'
+    ? (d => startOfWeek(d).toISOString().slice(0, 10))
+    : (d => startOfDay(d).toISOString().slice(0, 10));
+  const stepMs = period === 'weekly' ? dayMs * 7 : dayMs;
+  const totals = {};
+  const addEntry = (start, counts) => {
+    const key = keyOf(new Date(start));
+    totals[key] = (totals[key] || 0) + (counts[counterId] || 0);
+  };
+  history.forEach(h => addEntry(h.start, h.counts || migrateCounts(h)));
+  if(current) addEntry(current.startTime, current.counts);
+
+  const now = new Date();
+  let streak = 0;
+  if((totals[keyOf(now)] || 0) >= goal) streak++;
+  let cursor = new Date((period === 'weekly' ? startOfWeek(now) : startOfDay(now)).getTime() - stepMs);
+  while((totals[keyOf(cursor)] || 0) >= goal){
+    streak++;
+    cursor = new Date(cursor.getTime() - stepMs);
+  }
+  return streak;
+}
+
 function counterProgress(counterId, period){
   const now = new Date();
   const boundary = period === 'weekly' ? startOfWeek(now) : startOfDay(now);
@@ -789,10 +1249,62 @@ function counterProgress(counterId, period){
   return total;
 }
 
+// Notices when a day or week boundary has rolled over since the last time
+// this was checked (on load, or periodically while the tab stays open) and
+// toasts about it — but only if some counter actually has a goal on that
+// period, and only after a real baseline exists (never on the very first
+// visit, since there's nothing to have "reset" from yet).
+function checkGoalPeriodReset(){
+  const now = new Date();
+  const dayKey = startOfDay(now).toISOString().slice(0, 10);
+  const weekKey = startOfWeek(now).toISOString().slice(0, 10);
+  const hasDailyGoal = settings.counters.some(c => c.goal > 0 && c.goalPeriod !== 'weekly');
+  const hasWeeklyGoal = settings.counters.some(c => c.goal > 0 && c.goalPeriod === 'weekly');
+  let changed = false;
+  if(settings.lastSeenDayKey && settings.lastSeenDayKey !== dayKey){
+    if(hasDailyGoal) showToast('New day — daily goals reset.');
+    changed = true;
+  }
+  if(settings.lastSeenWeekKey && settings.lastSeenWeekKey !== weekKey){
+    if(hasWeeklyGoal) showToast('New week — weekly goals reset.');
+    changed = true;
+  }
+  if(settings.lastSeenDayKey !== dayKey || settings.lastSeenWeekKey !== weekKey){
+    settings.lastSeenDayKey = dayKey;
+    settings.lastSeenWeekKey = weekKey;
+    persist();
+    if(changed) render();
+  }
+}
+
+// Brings a parked shift back to life as `current`: pulls it out of
+// parkedShifts, migrates its counts against the live counter set (in case
+// counters changed while it was parked), and — if it was auto-parked by a
+// name switch rather than left on a manual break — closes out that
+// auto-break segment so it doesn't get charged against the agent forever.
+function resumeParkedShift(name){
+  const shift = parkedShifts[name];
+  if(!shift) return null;
+  delete parkedShifts[name];
+  shift.counts = migrateCounts(shift);
+  settings.counters.forEach(c => { if(shift.counts[c.id] === undefined) shift.counts[c.id] = 0; });
+  shift.lastAction = shift.lastAction || null;
+  if(shift._autoParkedBreak){
+    shift.breaks = shift.breaks || [];
+    shift.breaks.push({ start: shift.breakStart, end: new Date().toISOString() });
+    shift.onBreak = false;
+    shift.breakStart = null;
+    delete shift._autoParkedBreak;
+  }
+  return shift;
+}
+
 function loadState(){
   const data = storageGet() || {};
+  const isFirstEverVisit = Object.keys(data).length === 0;
   current = data.current || null;
   history = (data.history || []).map(h => ({ ...h, counts: migrateCounts(h), tasks: h.tasks ?? totalCount(migrateCounts(h)) }));
+  parkedShifts = data.parkedShifts || {};
   settings = Object.assign({ autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark' }, data.settings || {});
   if(!Array.isArray(settings.counters) || settings.counters.length === 0){
     settings.counters = DEFAULT_COUNTERS.map(c => ({ ...c }));
@@ -805,21 +1317,32 @@ function loadState(){
     current.lastAction = current.lastAction || null;
   }
 
-  if(settings.autoStartShift && !current){
+  if(!current && settings.agentName && parkedShifts[settings.agentName]){
+    current = resumeParkedShift(settings.agentName);
+  }
+
+  if(settings.autoStartShift && !current && settings.agentName){
     const counts = {};
     settings.counters.forEach(c => { counts[c.id] = 0; });
-    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
+    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [], agentName: settings.agentName || null };
   }
 
   document.body.classList.toggle('compact', !!settings.compactMode);
   els.compactBtn.classList.toggle('on', !!settings.compactMode);
+  if(isFirstEverVisit) els.tourBanner.classList.add('show');
+  updateAgentBadge();
+  if(!settings.agentName) openWelcomeModal();
   els.toggleAutoStart.checked = !!settings.autoStartShift;
   els.toggleSound.checked = settings.soundEnabled !== false;
+  els.toggleLightTheme.checked = !!settings.lightTheme;
+  document.body.classList.toggle('theme-light', !!settings.lightTheme);
   applyBackground();
 
   render();
   persist();
+  checkGoalPeriodReset();
 }
+setInterval(checkGoalPeriodReset, 60000);
 
 // Same "always save the latest state, never overlap" queue as the desktop
 // app — cheap here since storageSet is synchronous, but keeps behavior
@@ -831,7 +1354,7 @@ function persist(){
   saveInFlight = true;
   do{
     saveQueued = false;
-    storageSet({ current, history, settings });
+    storageSet({ current, history, settings, parkedShifts });
   } while(saveQueued);
   saveInFlight = false;
 }
@@ -869,6 +1392,17 @@ function renderSummary(){
     `<span>This month: <b>${monthTasks}</b> tasks across <b>${monthShifts}</b> shift${monthShifts===1?'':'s'}</span>`;
 }
 
+// Live "how long have I been at this" readout next to the shift-status
+// badge. Counts up once a second while a shift is active; while on break
+// it keeps ticking too (worked+break), which matches what someone glancing
+// at the badge actually wants to know: how long since they clocked in.
+function updateShiftTimer(){
+  if(!els.shiftTimer) return;
+  if(!current){ els.shiftTimer.textContent = '00:00:00'; return; }
+  const elapsedMs = Date.now() - new Date(current.startTime).getTime();
+  els.shiftTimer.textContent = formatDuration(elapsedMs);
+}
+
 function render(){
   const active = !!current;
   const onBreak = !!(current && current.onBreak);
@@ -879,6 +1413,7 @@ function render(){
   els.shiftDot.classList.toggle('active', active);
   els.shiftPillText.textContent = onBreak ? 'On break' : (active ? 'Shift active' : 'Start a shift');
   els.startedBadge.textContent = active ? `Started ${fmtTime(current.startTime)}` : 'No shift running';
+  updateShiftTimer();
 
   const counts = active ? current.counts : {};
   const count = totalCount(counts);
@@ -904,12 +1439,22 @@ function render(){
 
   renderSummary();
 
+  const distinctAgents = [...new Set(history.map(h => h.agentName).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const prevFilter = els.histAgentFilter.value;
+  els.histAgentFilter.innerHTML = '<option value="">All agents</option>' +
+    distinctAgents.map(name => `<option value="${escapeAttr(name)}">${escapeAttr(name)}</option>`).join('');
+  els.histAgentFilter.value = distinctAgents.includes(prevFilter) ? prevFilter : '';
+  els.histAgentFilter.style.display = distinctAgents.length > 1 ? '' : 'none';
+  const agentFilter = els.histAgentFilter.value;
+
   els.histBody.innerHTML = '';
-  if(history.length === 0){
+  const visibleHistory = agentFilter ? history.filter(h => h.agentName === agentFilter) : history;
+  if(visibleHistory.length === 0){
+    els.emptyHist.textContent = agentFilter ? `No shifts logged for ${agentFilter} yet` : 'No shifts logged yet';
     els.emptyHist.style.display = 'block';
   } else {
     els.emptyHist.style.display = 'none';
-    [...history].map((h, i) => ({ h, i })).reverse().forEach(({ h, i }) => {
+    [...history].map((h, i) => ({ h, i })).filter(({ h }) => !agentFilter || h.agentName === agentFilter).reverse().forEach(({ h, i }) => {
       const tr = document.createElement('tr');
       tr.className = 'hist-row';
       tr.title = 'Click to edit this shift';
@@ -922,13 +1467,15 @@ function render(){
       els.histBody.appendChild(tr);
 
       const breakdown = shiftBreakdown(h);
+      const breakMins = totalBreakMinutes(h);
       const btr = document.createElement('tr');
       btr.className = 'hist-breakdown-row';
       btr.title = 'Click to edit this shift';
-      const inner = breakdown.length
-        ? breakdown.map(b => `<span><b>${escapeAttr(b.name)}</b> ${b.count}</span>`).join('')
-        : `<span>No items logged</span>`;
-      btr.innerHTML = `<td colspan="4"><div class="hist-breakdown${breakdown.length ? '' : ' empty'}">${inner}</div></td>`;
+      const parts = breakdown.map(b => `<span><b>${escapeAttr(b.name)}</b> ${b.count}</span>`);
+      if(breakMins > 0) parts.push(`<span><b>Break</b> ${breakMins}m</span>`);
+      if(h.agentName) parts.unshift(`<span><b>Agent</b> ${escapeAttr(h.agentName)}</span>`);
+      const inner = parts.length ? parts.join('') : `<span>No items logged</span>`;
+      btr.innerHTML = `<td colspan="4"><div class="hist-breakdown${parts.length ? '' : ' empty'}">${inner}</div></td>`;
       btr.addEventListener('click', () => openEditModal(i));
       els.histBody.appendChild(btr);
     });
@@ -1046,6 +1593,8 @@ function renderCounters(){
     const isFlipped = flippedIds.has(c.id);
     const removeBtn = `<button class="counter-remove" data-remove="${c.id}" type="button" title="Hold to remove"><span>×</span></button>`;
     const gearBtn = `<button class="counter-gear${isFlipped ? ' on' : ''}" data-gear="${c.id}" type="button" title="Counter settings">⚙</button>`;
+    const dupDisabled = settings.counters.length >= MAX_COUNTERS;
+    const dupBtn = `<button class="counter-duplicate" data-duplicate="${c.id}" type="button" title="Duplicate counter" ${dupDisabled ? 'disabled' : ''}>⧉</button>`;
     const dragHandle = n > 1 ? `<div class="counter-drag-handle" data-drag="${c.id}" title="Drag onto another card to swap position">⠿⠿⠿</div>` : '';
     const cardColor = c.color || 'var(--accent)';
     const cardColorDim = c.color ? c.color + '33' : 'var(--accent-dim)';
@@ -1054,6 +1603,7 @@ function renderCounters(){
     const period = c.goalPeriod === 'weekly' ? 'weekly' : 'daily';
     const progress = goal > 0 ? counterProgress(c.id, period) : 0;
     const pct = goal > 0 ? Math.min(100, Math.round((progress / goal) * 100)) : 0;
+    const streak = goal > 0 ? counterStreak(c.id, goal, period) : 0;
     const goalRow = `
       <div class="counter-goal-row">
         <button class="counter-goal-period" data-goal-period="${c.id}" type="button" title="Toggle daily/weekly goal">${period === 'weekly' ? 'WK' : 'DAY'}</button>
@@ -1061,11 +1611,11 @@ function renderCounters(){
       </div>
       ${goal > 0 ? `
         <div class="counter-goal-bar-track"><div class="counter-goal-bar-fill" style="width:${pct}%"></div></div>
-        <div class="counter-goal-label">${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}</div>
+        <div class="counter-goal-label">${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}${streak >= 2 ? ` · 🔥${streak}` : ''}</div>
       ` : ''}`;
     return `
       <div class="counter-card${isFlipped ? ' flipped' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
-        <div class="counter-actions-tr">${gearBtn}${removeBtn}</div>
+        <div class="counter-actions-tr">${gearBtn}${dupBtn}${removeBtn}</div>
         ${dragHandle}
         <div class="card-flip-inner">
           <div class="card-face card-face-front">
@@ -1102,6 +1652,20 @@ function addCounter(){
   const id = newCounterId();
   settings.counters.push({ id, name: 'New Counter' });
   if(current) current.counts[id] = 0;
+  render();
+  persist();
+}
+function duplicateCounter(id){
+  if(settings.counters.length >= MAX_COUNTERS) return;
+  const idx = settings.counters.findIndex(c => c.id === id);
+  if(idx === -1) return;
+  const src = settings.counters[idx];
+  const newId = newCounterId();
+  // Copy the counter's config (name, color, goal) but start its tally at 0 —
+  // this is a template duplicate, not a snapshot of current progress.
+  const copy = { ...src, id: newId, name: (src.name + ' Copy').slice(0, 24) };
+  settings.counters.splice(idx + 1, 0, copy);
+  if(current) current.counts[newId] = 0;
   render();
   persist();
 }
@@ -1205,6 +1769,9 @@ els.countersGrid.addEventListener('click', (e) => {
   const swatch = e.target.closest('[data-swatch]');
   if(swatch){ setCounterColor(swatch.dataset.swatch, swatch.dataset.color); return; }
 
+  const dupBtn = e.target.closest('[data-duplicate]');
+  if(dupBtn){ if(!dupBtn.disabled) duplicateCounter(dupBtn.dataset.duplicate); return; }
+
   const goalPeriodBtn = e.target.closest('[data-goal-period]');
   if(goalPeriodBtn){ toggleGoalPeriod(goalPeriodBtn.dataset.goalPeriod); return; }
 
@@ -1287,7 +1854,10 @@ function updateCounterCardLive(key){
       const fill = card.querySelector('.counter-goal-bar-fill');
       if(fill) fill.style.width = pct + '%';
       const label = card.querySelector('.counter-goal-label');
-      if(label) label.textContent = `${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}`;
+      if(label){
+        const streak = counterStreak(key, goal, period);
+        label.textContent = `${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}${streak >= 2 ? ` · 🔥${streak}` : ''}`;
+      }
     }
   }
 
@@ -1314,14 +1884,28 @@ function adjustCounter(key, dir){
   persist();
 }
 
-// Page-level shortcut: works while this tab is open and focused. Unlike the
+// Page-level shortcuts: work while this tab is open and focused. Unlike the
 // desktop app, a web page can't register a truly global OS-wide hotkey.
-// Logs one of the first counter by default.
 document.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
   if((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'l'){
     e.preventDefault();
     if(settings.counters[0]) adjustCounter(settings.counters[0].id, 1);
+    return;
+  }
+  // Number keys 1-5 log a tap on the counter in that card position. Skipped
+  // while typing anywhere (renaming a counter, a goal field, a modal input)
+  // so digits type normally instead of being hijacked as shortcuts.
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target && e.target.tagName) || '';
+  const typing = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
+  if(typing) return;
+  if(/^[1-5]$/.test(e.key)){
+    const counter = settings.counters[parseInt(e.key, 10) - 1];
+    if(counter){
+      e.preventDefault();
+      adjustCounter(counter.id, 1);
+    }
   }
 });
 
@@ -1356,16 +1940,21 @@ els.endBtn.addEventListener('click', () => {
         current.breaks = current.breaks || [];
         current.breaks.push({ start: current.breakStart, end: new Date().toISOString() });
       }
-      history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, counterNames: Object.fromEntries(settings.counters.map(c => [c.id, c.name])), tasks: totalCount(current.counts) });
+      history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, counterNames: Object.fromEntries(settings.counters.map(c => [c.id, c.name])), tasks: totalCount(current.counts), breaks: current.breaks || [], agentName: current.agentName || null });
       current = null;
       render();
       persist();
     });
     return;
   }
+  if(!settings.agentName){
+    showToast('Pick your name before starting a shift');
+    openWelcomeModal();
+    return;
+  }
   const counts = {};
   settings.counters.forEach(c => { counts[c.id] = 0; });
-  current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [] };
+  current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [], agentName: settings.agentName || null };
   render();
   persist();
 });
@@ -1380,28 +1969,147 @@ els.clearBtn.addEventListener('click', () => {
 });
 
 // ---- CSV export (client-side Blob download, no native save dialog needed) ----
-function toCsv(){
-  const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks', 'Breakdown']];
-  history.forEach(h => {
+function toCsv(entries){
+  const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks', 'Break (min)', 'Breakdown', 'Agent']];
+  entries.forEach(h => {
     const c = h.counts || migrateCounts(h);
     const breakdownStr = shiftBreakdown(h).map(b => `${b.name}: ${b.count}`).join('; ');
-    rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks, breakdownStr]);
+    rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks, totalBreakMinutes(h), breakdownStr, h.agentName || '']);
   });
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
 els.exportBtn.addEventListener('click', () => {
   if(history.length === 0){ alert('No shift history to export yet.'); return; }
-  const csv = toCsv();
+  const dates = history.map(h => toDateInput(h.start)).sort();
+  els.exportFrom.value = dates[0];
+  els.exportTo.value = dates[dates.length - 1];
+  els.exportOverlay.classList.add('show');
+});
+els.exportCancelBtn.addEventListener('click', () => els.exportOverlay.classList.remove('show'));
+els.exportOverlay.addEventListener('click', (e) => { if(e.target === els.exportOverlay) els.exportOverlay.classList.remove('show'); });
+els.exportConfirmBtn.addEventListener('click', () => {
+  const from = els.exportFrom.value;
+  const to = els.exportTo.value;
+  if(from && to && from > to){ alert('"From" date must be on or before "To" date.'); return; }
+  const filtered = history.filter(h => {
+    const d = toDateInput(h.start);
+    return (!from || d >= from) && (!to || d <= to);
+  });
+  if(filtered.length === 0){ alert('No shifts logged in that date range.'); return; }
+  const csv = toCsv(filtered);
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `pod-shift-history-${toDateInput(new Date().toISOString())}.csv`;
+  const rangeSuffix = (from || to) ? `-${from || 'start'}_to_${to || 'end'}` : '';
+  a.download = `pod-shift-history${rangeSuffix}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  els.exportOverlay.classList.remove('show');
   els.counterStatus.textContent = 'Exported CSV';
+});
+
+// ---- CSV import: restore shifts from a file exported by this app ----
+function parseCsv(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(text[i + 1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += ch;
+    } else if(ch === '"'){
+      inQuotes = true;
+    } else if(ch === ','){
+      row.push(field); field = '';
+    } else if(ch === '\r'){
+      // skip
+    } else if(ch === '\n'){
+      row.push(field); rows.push(row); row = []; field = '';
+    } else {
+      field += ch;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(v => v !== ''));
+}
+function safeParseDate(str){
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+els.importCsvBtn.addEventListener('click', () => els.importCsvInput.click());
+els.importCsvInput.addEventListener('change', async () => {
+  const file = els.importCsvInput.files[0];
+  els.importCsvInput.value = '';
+  if(!file) return;
+  const text = await file.text();
+  const rows = parseCsv(text);
+  if(rows.length < 2){ alert('That file has no shift rows to import.'); return; }
+  const header = rows[0];
+  const dateIdx = header.indexOf('Date');
+  const startIdx = header.indexOf('Start');
+  const endIdx = header.indexOf('End');
+  const totalIdx = header.indexOf('Total Tasks');
+  const breakIdx = header.indexOf('Break (min)');
+  const agentIdx = header.indexOf('Agent');
+  if(dateIdx === -1 || startIdx === -1 || endIdx === -1 || totalIdx === -1){
+    alert("This doesn't look like a Pod Task Tracker CSV export.");
+    return;
+  }
+  // Counter columns sit between End and Total Tasks. Match them to existing
+  // counters by name; anything unmatched becomes a new counter (up to the
+  // 5-counter limit) so its history isn't silently dropped.
+  const counterCols = [];
+  for(let i = endIdx + 1; i < totalIdx; i++){
+    const name = (header[i] || '').trim();
+    if(!name) continue;
+    let counter = settings.counters.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if(!counter && settings.counters.length < MAX_COUNTERS){
+      counter = { id: newCounterId(), name: name.slice(0, 24) };
+      settings.counters.push(counter);
+    }
+    counterCols.push({ col: i, counter });
+  }
+
+  let imported = 0, skipped = 0;
+  const newEntries = [];
+  rows.slice(1).forEach(row => {
+    if(!row[dateIdx]) return;
+    const start = safeParseDate(`${row[dateIdx]} ${row[startIdx] || ''}`.trim());
+    const end = safeParseDate(`${row[dateIdx]} ${row[endIdx] || ''}`.trim());
+    if(!start || !end){ skipped++; return; }
+    const counts = {};
+    counterCols.forEach(({ col, counter }) => {
+      if(!counter) return;
+      counts[counter.id] = Math.max(0, parseInt(row[col], 10) || 0);
+    });
+    const tasks = parseInt(row[totalIdx], 10);
+    const entry = {
+      start: start.toISOString(),
+      end: end.toISOString(),
+      counts,
+      counterNames: Object.fromEntries(counterCols.filter(c => c.counter).map(c => [c.counter.id, c.counter.name])),
+      tasks: isNaN(tasks) ? totalCount(counts) : tasks,
+      imported: true,
+    };
+    if(breakIdx !== -1 && row[breakIdx] !== undefined && row[breakIdx] !== ''){
+      entry.breakMinutes = Math.max(0, parseInt(row[breakIdx], 10) || 0);
+    }
+    if(agentIdx !== -1 && row[agentIdx]){
+      entry.agentName = row[agentIdx];
+    }
+    newEntries.push(entry);
+    imported++;
+  });
+  if(imported === 0){ alert('No valid shift rows were found in that file.'); return; }
+  history = history.concat(newEntries).sort((a, b) => new Date(a.start) - new Date(b.start));
+  render();
+  persist();
+  showToast(`Imported ${imported} shift${imported === 1 ? '' : 's'}${skipped ? ` (${skipped} row${skipped === 1 ? '' : 's'} skipped)` : ''}.`);
 });
 
 // ---- Edit shift modal ----
@@ -1412,6 +2120,7 @@ function openEditModal(index){
   els.editDate.value = toDateInput(h.start);
   els.editStart.value = toTimeInput(h.start);
   els.editEnd.value = toTimeInput(h.end);
+  els.editBreakMinutes.value = totalBreakMinutes(h);
   els.editCountsFields.innerHTML = settings.counters.map(ct => `
     <div class="field">
       <label>${escapeAttr(ct.name)}</label>
@@ -1442,7 +2151,8 @@ els.editSaveBtn.addEventListener('click', () => {
     counts[inp.dataset.editCount] = Math.max(0, parseInt(inp.value, 10) || 0);
   });
   const counterNames = { ...(prevEntry.counterNames || {}), ...Object.fromEntries(settings.counters.map(c => [c.id, c.name])) };
-  history[editingIndex] = { ...prevEntry, start: combine(date, startT), end: combine(date, endT), counts, counterNames, tasks: totalCount(counts), edited: true };
+  const breakMinutes = Math.max(0, parseInt(els.editBreakMinutes.value, 10) || 0);
+  history[editingIndex] = { ...prevEntry, start: combine(date, startT), end: combine(date, endT), counts, counterNames, breakMinutes, tasks: totalCount(counts), edited: true };
   closeEditModal();
   render();
   persist();
@@ -1456,6 +2166,36 @@ els.editDeleteBtn.addEventListener('click', () => {
     persist();
   });
 });
+function printShiftSummary(h){
+  const breakdown = shiftBreakdown(h);
+  const breakMins = totalBreakMinutes(h);
+  const rows = breakdown.length
+    ? breakdown.map(b => `<tr><td>${escapeAttr(b.name)}</td><td style="text-align:right">${b.count}</td></tr>`).join('')
+    : '<tr><td colspan="2">No items logged</td></tr>';
+  const win = window.open('', '_blank', 'width=480,height=640');
+  if(!win){ alert('Please allow pop-ups for this site to print a shift summary.'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><title>Shift Summary — ${escapeAttr(fmtDate(h.start))}</title>
+<style>
+  body{ font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; padding:28px; color:#111; }
+  h1{ font-size:19px; margin:0 0 4px; }
+  .sub{ color:#555; font-size:13px; margin-bottom:20px; }
+  table{ width:100%; border-collapse:collapse; margin-bottom:16px; }
+  td{ padding:7px 0; border-bottom:1px solid #ddd; font-size:14px; }
+  .total{ font-weight:700; font-size:16px; padding-top:6px; }
+</style></head>
+<body>
+  <h1>Shift Summary</h1>
+  <div class="sub">${escapeAttr(fmtDate(h.start))} · ${escapeAttr(fmtTime(h.start))} – ${escapeAttr(fmtTime(h.end))}${breakMins ? ` · Break: ${breakMins}m` : ''}${h.agentName ? ` · Agent: ${escapeAttr(h.agentName)}` : ''}</div>
+  <table>${rows}<tr><td class="total">Total tasks</td><td class="total" style="text-align:right">${h.tasks}</td></tr></table>
+</body></html>`);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+els.editPrintBtn.addEventListener('click', () => {
+  if(editingIndex === null) return;
+  printShiftSummary(history[editingIndex]);
+});
 
 // ---- Compact mode (CSS-only toggle; no native window to resize on the web) ----
 function setCompact(compact){
@@ -1466,12 +2206,28 @@ function setCompact(compact){
 }
 els.compactBtn.addEventListener('click', () => setCompact(!document.body.classList.contains('compact')));
 
+window.addEventListener('scroll', () => {
+  els.backToTopBtn.classList.toggle('show', window.scrollY > 600);
+}, { passive: true });
+els.backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+els.tourBannerDismiss.addEventListener('click', () => els.tourBanner.classList.remove('show'));
+els.tipsToggleBtn.addEventListener('click', () => {
+  const visible = document.body.classList.toggle('tips-visible');
+  els.tipsToggleBtn.textContent = visible ? 'Hide tips ↑' : 'Show tips ↓';
+});
+
 // ---- Settings modal ----
 els.settingsBtn.addEventListener('click', () => els.settingsOverlay.classList.add('show'));
 els.settingsCloseBtn.addEventListener('click', () => els.settingsOverlay.classList.remove('show'));
 els.settingsOverlay.addEventListener('click', (e) => { if(e.target === els.settingsOverlay) els.settingsOverlay.classList.remove('show'); });
 els.toggleAutoStart.addEventListener('change', () => { settings.autoStartShift = els.toggleAutoStart.checked; persist(); });
 els.toggleSound.addEventListener('change', () => { settings.soundEnabled = els.toggleSound.checked; persist(); });
+els.toggleLightTheme.addEventListener('change', () => {
+  settings.lightTheme = els.toggleLightTheme.checked;
+  document.body.classList.toggle('theme-light', !!settings.lightTheme);
+  persist();
+});
 
 function applyBackground(){
   document.body.classList.remove('bg-white', 'bg-black');
@@ -1491,7 +2247,138 @@ document.getElementById('bgSwatchRow').addEventListener('click', (e) => {
 
 setInterval(() => {
   if(current && current.lastAction) els.undoHint.textContent = timeAgoLabel(current.lastAction.time);
+  updateShiftTimer();
 }, 1000);
+
+// ---- Welcome / agent name picker ----
+// Populate the dropdown once with the fixed roster (order as given), plus
+// a trailing "Other" option for anyone not on the list.
+const OTHER_VALUE = '__other__';
+AGENT_NAMES.forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  els.welcomeAgentSelect.appendChild(opt);
+});
+const otherOpt = document.createElement('option');
+otherOpt.value = OTHER_VALUE;
+otherOpt.textContent = 'Other…';
+els.welcomeAgentSelect.appendChild(otherOpt);
+
+function updateAgentBadge(){
+  els.agentBadgeText.textContent = settings.agentName ? settings.agentName : 'Set agent name';
+}
+function setWelcomeOtherVisible(visible){
+  els.welcomeOtherField.style.display = visible ? '' : 'none';
+}
+els.welcomeAgentSelect.addEventListener('change', () => {
+  const isOther = els.welcomeAgentSelect.value === OTHER_VALUE;
+  setWelcomeOtherVisible(isOther);
+  if(isOther) els.welcomeOtherInput.focus();
+});
+function openWelcomeModal(){
+  const savedName = settings.agentName || '';
+  const isKnown = AGENT_NAMES.includes(savedName);
+  // Flag which roster names currently have a parked (in-progress, paused)
+  // shift waiting, so switching to them reads as "resume" rather than a
+  // surprise when their counts pop back in.
+  Array.from(els.welcomeAgentSelect.options).forEach(opt => {
+    if(opt.value === OTHER_VALUE || opt.value === '') return;
+    opt.textContent = parkedShifts[opt.value] ? `${opt.value} (shift parked)` : opt.value;
+  });
+  if(savedName && !isKnown){
+    els.welcomeAgentSelect.value = OTHER_VALUE;
+    els.welcomeOtherInput.value = savedName;
+    setWelcomeOtherVisible(true);
+  } else {
+    els.welcomeAgentSelect.value = savedName;
+    els.welcomeOtherInput.value = '';
+    setWelcomeOtherVisible(false);
+  }
+  showWelcomePickStep();
+  els.welcomeOverlay.classList.add('show');
+}
+function closeWelcomeModal(){
+  els.welcomeOverlay.classList.remove('show');
+}
+function showWelcomePickStep(){
+  els.welcomePickStep.style.display = '';
+  els.welcomeConfirmStep.style.display = 'none';
+}
+function showWelcomeConfirmStep(name){
+  els.welcomeConfirmName.textContent = name;
+  els.welcomePickStep.style.display = 'none';
+  els.welcomeConfirmStep.style.display = '';
+}
+// Step 1: validate the pick and ask "is this you?" before anything is applied.
+els.welcomeConfirmBtn.addEventListener('click', () => {
+  const selected = els.welcomeAgentSelect.value;
+  if(!selected){ els.welcomeAgentSelect.focus(); return; }
+  let name = selected;
+  if(selected === OTHER_VALUE){
+    name = els.welcomeOtherInput.value.trim();
+    if(!name){ els.welcomeOtherInput.focus(); return; }
+  }
+  showWelcomeConfirmStep(name);
+});
+els.welcomeConfirmBackBtn.addEventListener('click', showWelcomePickStep);
+// Step 2: they've confirmed it's really them — now actually apply the switch.
+els.welcomeConfirmYesBtn.addEventListener('click', () => {
+  const name = els.welcomeConfirmName.textContent;
+  const isSwitch = current && current.agentName && current.agentName !== name;
+  let toastMsg = null;
+
+  if(isSwitch){
+    // Park the outgoing shift instead of ending it. If it isn't already on
+    // a manual break, put it on an automatic one — its counts and timer
+    // are frozen from history's perspective the moment you swap away, and
+    // pick back up exactly where they left off if you switch back.
+    const outgoingName = current.agentName;
+    if(!current.onBreak){
+      current.onBreak = true;
+      current.breakStart = new Date().toISOString();
+      current._autoParkedBreak = true;
+    }
+    parkedShifts[outgoingName] = current;
+    current = null;
+
+    const resumed = resumeParkedShift(name);
+    if(resumed){
+      current = resumed;
+      toastMsg = `Welcome back, ${name} — resuming your shift. ${outgoingName}'s shift is parked until they switch back.`;
+    } else {
+      toastMsg = `${outgoingName}'s shift is parked — resume anytime by switching back to them.`;
+    }
+  } else if(current && !current.agentName){
+    // A shift with no owner yet (edge case) — attribute it to whoever just
+    // picked their name, same as before.
+    current.agentName = name;
+  } else if(!current){
+    const resumed = resumeParkedShift(name);
+    if(resumed){
+      current = resumed;
+      toastMsg = `Welcome back, ${name} — resuming your parked shift.`;
+    }
+  }
+
+  settings.agentName = name;
+  if(!current && settings.autoStartShift){
+    const counts = {};
+    settings.counters.forEach(c => { counts[c.id] = 0; });
+    current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [], agentName: name };
+  }
+  updateAgentBadge();
+  closeWelcomeModal();
+  if(toastMsg) showToast(toastMsg);
+  render();
+  persist();
+});
+els.welcomeOtherInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') els.welcomeConfirmBtn.click();
+});
+els.agentBadge.addEventListener('click', openWelcomeModal);
+els.histAgentFilter.addEventListener('change', render);
+els.welcomeOverlay.addEventListener('click', (e) => { if(e.target === els.welcomeOverlay) closeWelcomeModal(); });
 
 // ---- Persistence safety net ----
 // Every action already calls persist() the moment it happens, so nothing
