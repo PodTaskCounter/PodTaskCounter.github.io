@@ -39,7 +39,43 @@
     color: var(--text);
     font-family: var(--font-body);
     padding: clamp(16px, 4vmin, 40px) clamp(14px, 3vmin, 32px) clamp(20px, 4vmin, 60px);
+    position: relative;
   }
+
+  /* ---- Ambient background blobs (gives the glass panels something to
+     blur against) + fine grain texture, both fixed and non-interactive ---- */
+  body::before{
+    content:""; position: fixed; inset: -10%; z-index: -2; pointer-events:none;
+    background:
+      radial-gradient(600px 500px at 12% 8%, var(--accent-dim), transparent 60%),
+      radial-gradient(700px 600px at 90% 85%, #4ade8022, transparent 60%),
+      radial-gradient(500px 500px at 85% 5%, #7a5cff1c, transparent 60%);
+    filter: blur(10px);
+    opacity: .45;
+    animation: ambientDrift 34s ease-in-out infinite alternate;
+    transition: opacity .6s ease;
+  }
+  body.shift-active::before{ opacity: .85; animation-duration: 22s; }
+  body.shift-break::before{
+    opacity: .7;
+    background:
+      radial-gradient(650px 550px at 15% 10%, #fbbf2433, transparent 60%),
+      radial-gradient(700px 600px at 88% 88%, #fbbf2422, transparent 60%),
+      radial-gradient(500px 500px at 85% 5%, #7a5cff1c, transparent 60%);
+  }
+  @keyframes ambientDrift{
+    0%{ transform: translate(0,0) scale(1); }
+    100%{ transform: translate(-2%, 2%) scale(1.04); }
+  }
+  body::after{
+    content:""; position: fixed; inset:0; z-index:-1; pointer-events:none;
+    opacity: .035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  @media (prefers-reduced-motion: reduce){ body::before{ animation: none; } }
+
+  /* ---- View Transitions tuning (used by render()'s startViewTransition wrap) ---- */
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration: .22s; animation-timing-function: ease-out; }
 
   .wrap{ max-width: 1180px; margin: 0 auto; }
 
@@ -237,11 +273,22 @@
   .counter-card.flipped .card-flip-inner{ transform: rotateY(180deg); }
   .card-face{
     position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    background: var(--panel); border:1px solid var(--border); border-radius:16px;
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border:1px solid var(--border);
+    border-top-color: color-mix(in srgb, var(--text) 12%, var(--border));
+    border-radius:16px;
+    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--text) 6%, transparent) inset,
+                0 14px 34px -14px #00000066;
     padding: clamp(20px, 3.2vmin, 28px) clamp(14px, 2.6vmin, 18px);
     display:flex; flex-direction:column; align-items:center; gap: clamp(10px, 2vmin, 14px);
     text-align:center; justify-content:center;
+    /* cursor-tracked glow, position set via JS on mousemove */
+    background-image: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent 65%);
+    transition: border-color .15s, box-shadow .15s, transform .15s;
   }
+  .counter-card:hover .card-face-front{ transform: translateY(-2px); }
   .card-face-back{ transform: rotateY(180deg); }
   .counter-card-label{
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
@@ -346,10 +393,18 @@
     display:flex; flex-direction:column; gap:8px; z-index:80; align-items:center; width:min(92vw, 380px);
   }
   .toast{
-    display:flex; align-items:center; gap:12px; background: var(--panel-2); border:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+    background: color-mix(in srgb, var(--panel-2) 78%, transparent);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border:1px solid var(--border);
+    border-top-color: color-mix(in srgb, var(--text) 12%, var(--border));
     border-radius:10px; padding:10px 12px 10px 16px; font-size:13px; color: var(--text);
-    box-shadow: 0 8px 30px #000000aa; width:100%;
+    box-shadow: 0 2px 8px -2px #00000066, 0 20px 40px -18px #000000aa;
+    width:100%;
+    animation: toastIn .28s cubic-bezier(.34,1.56,.64,1);
   }
+  @keyframes toastIn{ from{ opacity:0; transform: translateY(10px) scale(.96); } to{ opacity:1; transform:none; } }
   .toast span.msg{ flex:1; }
   .toast button{
     background: none; border:1px solid var(--border); border-radius:7px; color: var(--accent);
@@ -378,11 +433,11 @@
   .ctr-btn{
     flex:1; height: clamp(32px, 5.5vmin, 40px); border-radius:999px;
     font-family: var(--font-display); font-weight:900; font-size:16px;
-    cursor:pointer; transition: filter .15s, transform .08s;
+    cursor:pointer; transition: filter .15s, transform .32s cubic-bezier(.34,1.56,.64,1);
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     -webkit-user-select:none; user-select:none;
   }
-  .ctr-btn:active{ transform: scale(.94); }
+  .ctr-btn:active{ transform: scale(.9); transition-duration: .05s; }
   .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
   .ctr-btn.minus{
     background: transparent; border:1.5px dashed var(--border); color: var(--muted);
@@ -398,10 +453,11 @@
     flex:1; min-width: 90px; padding: clamp(10px, 2.2vmin, 15px); border-radius: 10px; border:1px solid var(--border);
     background: var(--panel); color: var(--text); font-weight:700; font-size: clamp(12px, 2vmin, 14px);
     display:flex; align-items:center; justify-content:center; gap:8px;
-    cursor:pointer; transition: filter .15s, opacity .15s;
+    cursor:pointer; transition: filter .15s, opacity .15s, transform .28s cubic-bezier(.34,1.56,.64,1);
   }
   .btn:disabled{ opacity:.35; cursor:not-allowed; }
-  .btn:not(:disabled):hover{ filter: brightness(1.15); }
+  .btn:not(:disabled):hover{ filter: brightness(1.15); transform: translateY(-1px); }
+  .btn:not(:disabled):active{ transform: scale(.96); transition-duration: .05s; }
   .btn.danger{ background: var(--accent); border-color: var(--accent); color:#140900; }
   .btn.warn{ background: var(--warn); border-color: var(--warn); color:#1a1300; }
   .btn.primary{ background: var(--accent); border-color: var(--accent); color:#140900; }
@@ -419,8 +475,16 @@
   .summary-bar b{ color: var(--text); }
 
   .panel{
-    background: var(--panel); border:1px solid var(--border); border-radius:14px;
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border:1px solid var(--border);
+    border-top-color: color-mix(in srgb, var(--text) 12%, var(--border));
+    border-radius:14px;
+    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--text) 6%, transparent) inset,
+                0 14px 34px -14px #00000066;
     padding: clamp(14px, 2.5vmin, 22px);
+    background-image: radial-gradient(280px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--accent) 8%, transparent), transparent 65%);
   }
   .stat-row{ display:grid; grid-template-columns:1fr 1fr; gap: clamp(8px, 2vmin, 14px); margin-bottom: clamp(14px, 2.5vmin, 22px); }
   .stat-box{
@@ -474,6 +538,21 @@
   .hist-breakdown b{ color: var(--text); font-weight:600; }
   .hist-breakdown.empty{ color: var(--muted-2); font-style:italic; }
   .empty-hist{ color: var(--muted-2); font-size:13px; padding: 18px 0; text-align:center; }
+
+  .hist-sparkline{
+    background: var(--panel-2); border:1px solid var(--border); border-radius:10px;
+    padding: 10px 12px 8px; margin-bottom: clamp(12px, 2vmin, 16px);
+  }
+  .hist-sparkline.hidden{ display:none; }
+  .hist-sparkline-label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family: var(--font-mono); font-size:10px; letter-spacing:2px;
+    color: var(--muted-2); font-weight:700; margin-bottom:6px;
+  }
+  .hist-sparkline-label span:last-child{ letter-spacing:0; font-weight:600; color: var(--muted); text-transform:none; font-size:11px; }
+  .hist-sparkline-chart{ display:block; line-height:0; }
+  .hist-sparkline-chart svg{ display:block; width:100%; height: clamp(30px, 5vmin, 40px); overflow: visible; }
+  .hist-sparkline-chart circle{ transition: r .12s ease; }
 
   .note{ font-size:11.5px; color: var(--muted-2); text-align:center; margin-top:18px; }
   .shortcut-note{ font-family: var(--font-mono); }
@@ -640,6 +719,14 @@
           <button class="clear-btn export" id="exportBtn">⬇ CSV</button>
           <button class="clear-btn" id="clearBtn">🗑 Clear</button>
         </div>
+      </div>
+
+      <div class="hist-sparkline hidden" id="histSparkline">
+        <div class="hist-sparkline-label">
+          <span>TASKS / DAY</span>
+          <span id="histSparklineRange"></span>
+        </div>
+        <div class="hist-sparkline-chart" id="histSparklineChart"></div>
       </div>
 
       <table>
@@ -1121,6 +1208,9 @@ const els = {
   shiftAvg: document.getElementById('shiftAvg'),
   histBody: document.getElementById('histBody'),
   histAgentFilter: document.getElementById('histAgentFilter'),
+  histSparkline: document.getElementById('histSparkline'),
+  histSparklineChart: document.getElementById('histSparklineChart'),
+  histSparklineRange: document.getElementById('histSparklineRange'),
   emptyHist: document.getElementById('emptyHist'),
   clearBtn: document.getElementById('clearBtn'),
   exportBtn: document.getElementById('exportBtn'),
@@ -1187,6 +1277,8 @@ function fmtDate(iso){
   return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'2-digit', year:'numeric' });
 }
 function pad2(n){ return String(n).padStart(2, '0'); }
+function dayKey(iso){ const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function dayKeyLabel(key){ const [y,m,d] = key.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { month:'short', day:'numeric' }); }
 function toDateInput(iso){ const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 function toTimeInput(iso){ const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
 function combine(dateStr, timeStr){ return new Date(`${dateStr}T${timeStr}:00`).toISOString(); }
@@ -1243,7 +1335,7 @@ function counterProgress(counterId, period){
       total += c[counterId] || 0;
     }
   });
-  if(current && new Date(current.startTime) >= boundary){
+  if(current){
     total += current.counts[counterId] || 0;
   }
   return total;
@@ -1403,13 +1495,43 @@ function updateShiftTimer(){
   els.shiftTimer.textContent = formatDuration(elapsedMs);
 }
 
+// ---- Count-up animation for stat numbers: eases from the currently
+// displayed value to the new one instead of snapping, only when it changes. ----
+function setStatValue(el, newVal){
+  const from = parseInt(el.textContent, 10) || 0;
+  if(from === newVal){ el.textContent = newVal; return; }
+  const duration = 320;
+  const start = performance.now();
+  function tick(now){
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    el.textContent = Math.round(from + (newVal - from) * eased);
+    if(p < 1) requestAnimationFrame(tick);
+    else el.textContent = newVal;
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---- View-transition wrapper: cross-fades/morphs DOM updates on browsers
+// that support the View Transitions API, falls back to a plain re-render
+// everywhere else (Firefox, older Safari). ----
 function render(){
+  if(document.startViewTransition){
+    document.startViewTransition(() => renderImpl());
+  } else {
+    renderImpl();
+  }
+}
+
+function renderImpl(){
   const active = !!current;
   const onBreak = !!(current && current.onBreak);
 
   els.shiftPill.classList.toggle('active', active && !onBreak);
   els.shiftPill.classList.toggle('break', onBreak);
   els.shiftPill.classList.toggle('idle', !active);
+  document.body.classList.toggle('shift-active', active && !onBreak);
+  document.body.classList.toggle('shift-break', onBreak);
   els.shiftDot.classList.toggle('active', active);
   els.shiftPillText.textContent = onBreak ? 'On break' : (active ? 'Shift active' : 'Start a shift');
   els.startedBadge.textContent = active ? `Started ${fmtTime(current.startTime)}` : 'No shift running';
@@ -1434,8 +1556,8 @@ function render(){
 
   const histTotal = history.reduce((s,h) => s + h.tasks, 0);
   const totalLogged = histTotal + count;
-  els.totalLogged.textContent = totalLogged;
-  els.shiftAvg.textContent = history.length ? Math.round(histTotal / history.length) : (active ? count : 0);
+  setStatValue(els.totalLogged, totalLogged);
+  setStatValue(els.shiftAvg, history.length ? Math.round(histTotal / history.length) : (active ? count : 0));
 
   renderSummary();
 
@@ -1449,6 +1571,7 @@ function render(){
 
   els.histBody.innerHTML = '';
   const visibleHistory = agentFilter ? history.filter(h => h.agentName === agentFilter) : history;
+  renderSparkline(visibleHistory);
   if(visibleHistory.length === 0){
     els.emptyHist.textContent = agentFilter ? `No shifts logged for ${agentFilter} yet` : 'No shifts logged yet';
     els.emptyHist.style.display = 'block';
@@ -1480,6 +1603,62 @@ function render(){
       els.histBody.appendChild(btr);
     });
   }
+}
+
+// ---- Tasks/day sparkline above the history table. Groups finished shifts
+// by calendar day (respecting whatever agent filter is active), then draws
+// a small inline SVG trend line — no charting library needed. ----
+const SPARKLINE_MAX_DAYS = 14;
+function renderSparkline(visibleHistory){
+  const byDay = new Map();
+  visibleHistory.forEach(h => {
+    const key = dayKey(h.start);
+    byDay.set(key, (byDay.get(key) || 0) + h.tasks);
+  });
+  const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  const recent = days.slice(-SPARKLINE_MAX_DAYS);
+
+  if(recent.length < 2){
+    els.histSparkline.classList.add('hidden');
+    els.histSparklineChart.innerHTML = '';
+    els.histSparklineRange.textContent = '';
+    return;
+  }
+  els.histSparkline.classList.remove('hidden');
+
+  const W = 100, H = 32, PAD_X = 2, PAD_Y = 4;
+  const values = recent.map(([, v]) => v);
+  const max = Math.max(...values, 1);
+  const stepX = recent.length > 1 ? (W - PAD_X * 2) / (recent.length - 1) : 0;
+  const pts = recent.map(([key, v], i) => ({
+    x: PAD_X + i * stepX,
+    y: H - PAD_Y - (v / max) * (H - PAD_Y * 2),
+    v, key
+  }));
+
+  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+  const areaPath = `${linePath} L${pts[pts.length - 1].x.toFixed(2)},${H} L${pts[0].x.toFixed(2)},${H} Z`;
+
+  const dots = pts.map((p, i) => {
+    const isLast = i === pts.length - 1;
+    const label = `${dayKeyLabel(p.key)}: ${p.v} task${p.v === 1 ? '' : 's'}`;
+    return `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${isLast ? 2.4 : 1.3}" fill="${isLast ? 'var(--accent)' : 'var(--muted)'}" opacity="${isLast ? '1' : '0.75'}"><title>${escapeAttr(label)}</title></circle>`;
+  }).join('');
+
+  els.histSparklineChart.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Tasks logged per day, last ${recent.length} days, ranging from ${Math.min(...values)} to ${max}">
+      <defs>
+        <linearGradient id="sparkFillGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#sparkFillGrad)" stroke="none"/>
+      <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    </svg>`;
+
+  els.histSparklineRange.textContent = `${dayKeyLabel(recent[0][0])} \u2013 ${dayKeyLabel(recent[recent.length - 1][0])}`;
 }
 
 // ---- Card flip (settings back-face) with auto-close: the back face closes
@@ -1684,7 +1863,11 @@ function removeCounter(id){
     actionLabel: 'Undo',
     duration: 6000,
     onAction: () => {
-      settings.counters.splice(idx, 0, removedCounter);
+      // idx was this counter's position at removal time; other counters may
+      // have been added/removed/duplicated since, so clamp it to the current
+      // length rather than trusting a now-possibly-stale index.
+      const insertAt = Math.min(idx, settings.counters.length);
+      settings.counters.splice(insertAt, 0, removedCounter);
       if(current && removedCount !== undefined) current.counts[id] = removedCount;
       render();
       persist();
@@ -2062,7 +2245,7 @@ els.importCsvInput.addEventListener('change', async () => {
   }
   // Counter columns sit between End and Total Tasks. Match them to existing
   // counters by name; anything unmatched becomes a new counter (up to the
-  // 5-counter limit) so its history isn't silently dropped.
+  // 8-counter limit) so its history isn't silently dropped.
   const counterCols = [];
   for(let i = endIdx + 1; i < totalIdx; i++){
     const name = (header[i] || '').trim();
@@ -2152,7 +2335,16 @@ els.editSaveBtn.addEventListener('click', () => {
   });
   const counterNames = { ...(prevEntry.counterNames || {}), ...Object.fromEntries(settings.counters.map(c => [c.id, c.name])) };
   const breakMinutes = Math.max(0, parseInt(els.editBreakMinutes.value, 10) || 0);
-  history[editingIndex] = { ...prevEntry, start: combine(date, startT), end: combine(date, endT), counts, counterNames, breakMinutes, tasks: totalCount(counts), edited: true };
+  const startIso = combine(date, startT);
+  let endIso = combine(date, endT);
+  // The modal only has one date field, but a shift can cross midnight. If the
+  // saved end time isn't after the start time, assume it rolled into the next
+  // day rather than silently stamping the end with the start's date (which
+  // would corrupt the entry into a negative-duration shift).
+  if(new Date(endIso) <= new Date(startIso)){
+    endIso = new Date(new Date(endIso).getTime() + 24 * 3600 * 1000).toISOString();
+  }
+  history[editingIndex] = { ...prevEntry, start: startIso, end: endIso, counts, counterNames, breakMinutes, tasks: totalCount(counts), edited: true };
   closeEditModal();
   render();
   persist();
@@ -2399,6 +2591,23 @@ window.addEventListener('beforeunload', flushPersist);
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').catch(() => { /* offline support unavailable here; app still works online */ });
+  });
+}
+
+// ---- Cursor-tracked glow on counter cards ('2026 glass' hover effect) ----
+// Delegated on the grid container since cards are re-created on every render().
+if(window.matchMedia('(hover: hover) and (pointer: fine)').matches){
+  const applyGlow = (el, e) => {
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`);
+    el.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`);
+  };
+  els.countersGrid.addEventListener('mousemove', (e) => {
+    const front = e.target.closest('.card-face-front');
+    if(front) applyGlow(front, e);
+  });
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.addEventListener('mousemove', (e) => applyGlow(panel, e));
   });
 }
 
