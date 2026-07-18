@@ -322,17 +322,21 @@
   .counter-actions-tr{
     position:absolute; top:8px; right:8px; z-index:3; display:flex; flex-direction:column; gap:5px; align-items:center;
   }
-  .counter-remove, .counter-gear, .counter-duplicate{
+  .counter-lock-tl{
+    position:absolute; top:8px; left:8px; z-index:3;
+  }
+  .counter-remove, .counter-gear, .counter-lock{
     width:20px; height:20px;
     border-radius:50%; border:1px solid var(--border); background: var(--panel-2);
     color: var(--muted); font-size:11px; line-height:1; cursor:pointer; padding:0;
     display:flex; align-items:center; justify-content:center;
     transition: color .15s, border-color .15s, background .15s, transform .1s;
   }
-  .counter-remove:hover, .counter-gear:hover, .counter-duplicate:not(:disabled):hover{ color: var(--accent); border-color: var(--accent); }
-  .counter-remove:active, .counter-gear:active, .counter-duplicate:not(:disabled):active{ transform: scale(.9); }
+  .counter-remove:hover, .counter-gear:hover, .counter-lock:hover{ color: var(--accent); border-color: var(--accent); }
+  .counter-remove:active, .counter-gear:active, .counter-lock:active{ transform: scale(.9); }
   .counter-gear.on{ color: var(--accent); border-color: var(--accent); }
-  .counter-duplicate:disabled{ opacity:.3; cursor:not-allowed; }
+  .counter-lock{ font-size:10px; }
+  .counter-lock.on{ color:#140900; border-color: var(--accent); background: var(--accent); }
   .counter-card{ --card-accent: var(--accent); --card-accent-dim: var(--accent-dim); }
 
   /* ---- Long-press-to-remove: a radial fill sweeps in while held; releasing
@@ -353,7 +357,7 @@
   /* ---- Drag handle for swap-to-reorder: press and drag a card onto another
      card to swap their positions (replaces the old up/down arrow buttons). ---- */
   .counter-drag-handle{
-    position:absolute; top:6px; left:8px; right:34px; height:16px; z-index:3;
+    position:absolute; top:6px; left:34px; right:34px; height:16px; z-index:3;
     display:flex; align-items:center; justify-content:center; gap:2px;
     cursor:grab; touch-action:none; -webkit-touch-callout:none;
     color: var(--muted-2); font-size:12px; letter-spacing:3px; line-height:1;
@@ -376,6 +380,14 @@
   }
   .counter-swatch:hover{ transform: scale(1.15); }
   .counter-swatch.selected{ border-color: var(--text); box-shadow: 0 0 0 2px var(--panel); }
+  .back-face-duplicate{
+    margin-top:14px; font-family: var(--font-mono); font-size:11px; font-weight:700;
+    color: var(--muted); background: var(--panel-2); border:1px solid var(--border);
+    border-radius:999px; padding:7px 16px; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .back-face-duplicate:hover{ color: var(--text); border-color:#3a3a42; }
+  .back-face-duplicate:disabled{ opacity:.35; cursor:not-allowed; }
   .back-face-done{
     margin-top:6px; font-family: var(--font-mono); font-size:11px; font-weight:700;
     color: var(--muted); background: var(--panel-2); border:1px solid var(--border);
@@ -454,6 +466,7 @@
   }
   .ctr-btn:active{ transform: scale(.9); transition-duration: .05s; }
   .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
+  .counter-card.locked .card-face-front{ border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
   .ctr-btn.minus{
     background: transparent; border:1.5px dashed var(--border); color: var(--muted);
   }
@@ -590,7 +603,7 @@
   body.compact .ctr-btn{ height:24px; font-size:12px; }
   body.compact .counter-remove{ display:none; }
   body.compact .counter-gear{ display:none; }
-  body.compact .counter-duplicate{ display:none; }
+  body.compact .counter-lock-tl{ display:none; }
   body.compact .counter-drag-handle{ display:none; }
   body.compact .counter-swatch-row{ display:none; }
   body.compact .counter-goal-row{ display:none; }
@@ -1327,10 +1340,15 @@ function startOfDay(d){ const dt = new Date(d); dt.setHours(0,0,0,0); return dt;
 function counterStreak(counterId, goal, period){
   if(!goal) return 0;
   const dayMs = 24 * 3600 * 1000;
-  const keyOf = period === 'weekly'
-    ? (d => startOfWeek(d).toISOString().slice(0, 10))
+  const keyOf = period === 'weekly' ? (d => startOfWeek(d).toISOString().slice(0, 10))
+    : period === 'monthly' ? (d => startOfMonth(d).toISOString().slice(0, 10))
     : (d => startOfDay(d).toISOString().slice(0, 10));
-  const stepMs = period === 'weekly' ? dayMs * 7 : dayMs;
+  // Steps back one period at a time. Months vary in length, so monthly
+  // stepping walks the calendar (via startOfMonth) rather than subtracting a
+  // fixed number of milliseconds like daily/weekly do.
+  const prevPeriodStart = period === 'weekly' ? (d => new Date(d.getTime() - dayMs * 7))
+    : period === 'monthly' ? (d => new Date(d.getFullYear(), d.getMonth() - 1, 1))
+    : (d => new Date(d.getTime() - dayMs));
   const totals = {};
   const addEntry = (start, counts) => {
     const key = keyOf(new Date(start));
@@ -1342,17 +1360,18 @@ function counterStreak(counterId, goal, period){
   const now = new Date();
   let streak = 0;
   if((totals[keyOf(now)] || 0) >= goal) streak++;
-  let cursor = new Date((period === 'weekly' ? startOfWeek(now) : startOfDay(now)).getTime() - stepMs);
+  const curBoundary = period === 'weekly' ? startOfWeek(now) : period === 'monthly' ? startOfMonth(now) : startOfDay(now);
+  let cursor = prevPeriodStart(curBoundary);
   while((totals[keyOf(cursor)] || 0) >= goal){
     streak++;
-    cursor = new Date(cursor.getTime() - stepMs);
+    cursor = prevPeriodStart(cursor);
   }
   return streak;
 }
 
 function counterProgress(counterId, period){
   const now = new Date();
-  const boundary = period === 'weekly' ? startOfWeek(now) : startOfDay(now);
+  const boundary = period === 'weekly' ? startOfWeek(now) : period === 'monthly' ? startOfMonth(now) : startOfDay(now);
   let total = 0;
   history.forEach(h => {
     if(new Date(h.start) >= boundary){
@@ -1375,8 +1394,10 @@ function checkGoalPeriodReset(){
   const now = new Date();
   const dayKey = startOfDay(now).toISOString().slice(0, 10);
   const weekKey = startOfWeek(now).toISOString().slice(0, 10);
-  const hasDailyGoal = settings.counters.some(c => c.goal > 0 && c.goalPeriod !== 'weekly');
+  const monthKey = startOfMonth(now).toISOString().slice(0, 10);
+  const hasDailyGoal = settings.counters.some(c => c.goal > 0 && (!c.goalPeriod || c.goalPeriod === 'daily'));
   const hasWeeklyGoal = settings.counters.some(c => c.goal > 0 && c.goalPeriod === 'weekly');
+  const hasMonthlyGoal = settings.counters.some(c => c.goal > 0 && c.goalPeriod === 'monthly');
   let changed = false;
   if(settings.lastSeenDayKey && settings.lastSeenDayKey !== dayKey){
     if(hasDailyGoal) showToast('New day — daily goals reset.');
@@ -1386,9 +1407,14 @@ function checkGoalPeriodReset(){
     if(hasWeeklyGoal) showToast('New week — weekly goals reset.');
     changed = true;
   }
-  if(settings.lastSeenDayKey !== dayKey || settings.lastSeenWeekKey !== weekKey){
+  if(settings.lastSeenMonthKey && settings.lastSeenMonthKey !== monthKey){
+    if(hasMonthlyGoal) showToast('New month — monthly goals reset.');
+    changed = true;
+  }
+  if(settings.lastSeenDayKey !== dayKey || settings.lastSeenWeekKey !== weekKey || settings.lastSeenMonthKey !== monthKey){
     settings.lastSeenDayKey = dayKey;
     settings.lastSeenWeekKey = weekKey;
+    settings.lastSeenMonthKey = monthKey;
     persist();
     if(changed) render();
   }
@@ -1792,34 +1818,38 @@ function renderCounters(){
 
   let html = settings.counters.map((c, idx) => {
     const val = counts[c.id] || 0;
-    const minusDisabled = !active || onBreak || val === 0;
-    const plusDisabled = !active || onBreak;
+    const locked = !!c.locked;
+    const minusDisabled = !active || onBreak || val === 0 || locked;
+    const plusDisabled = !active || onBreak || locked;
     const isFlipped = flippedIds.has(c.id);
     const removeBtn = `<button class="counter-remove" data-remove="${c.id}" type="button" title="Hold to remove"><span>×</span></button>`;
     const gearBtn = `<button class="counter-gear${isFlipped ? ' on' : ''}" data-gear="${c.id}" type="button" title="Counter settings">⚙</button>`;
     const dupDisabled = settings.counters.length >= MAX_COUNTERS;
-    const dupBtn = `<button class="counter-duplicate" data-duplicate="${c.id}" type="button" title="Duplicate counter" ${dupDisabled ? 'disabled' : ''}>⧉</button>`;
+    const lockBtn = `<button class="counter-lock${locked ? ' on' : ''}" data-lock="${c.id}" type="button" title="${locked ? 'Unlock counter' : 'Lock counter (prevent accidental taps)'}">${locked ? '🔒' : '🔓'}</button>`;
     const dragHandle = n > 1 ? `<div class="counter-drag-handle" data-drag="${c.id}" title="Drag onto another card to swap position">⠿⠿⠿</div>` : '';
     const cardColor = c.color || 'var(--accent)';
     const cardColorDim = c.color ? c.color + '33' : 'var(--accent-dim)';
     const swatches = COLOR_PALETTE.map(hex => `<button class="counter-swatch${(c.color === hex || (!c.color && hex === COLOR_PALETTE[0])) ? ' selected' : ''}" data-swatch="${c.id}" data-color="${hex}" type="button" style="background:${hex}" title="Set accent color"></button>`).join('');
     const goal = c.goal || 0;
-    const period = c.goalPeriod === 'weekly' ? 'weekly' : 'daily';
+    const period = c.goalPeriod === 'weekly' ? 'weekly' : c.goalPeriod === 'monthly' ? 'monthly' : 'daily';
+    const periodLabel = period === 'weekly' ? 'WK' : period === 'monthly' ? 'MO' : 'DAY';
+    const periodText = period === 'weekly' ? 'this week' : period === 'monthly' ? 'this month' : 'today';
     const progress = goal > 0 ? counterProgress(c.id, period) : 0;
     const pct = goal > 0 ? Math.min(100, Math.round((progress / goal) * 100)) : 0;
     const streak = goal > 0 ? counterStreak(c.id, goal, period) : 0;
     const goalRow = `
       <div class="counter-goal-row">
-        <button class="counter-goal-period" data-goal-period="${c.id}" type="button" title="Toggle daily/weekly goal">${period === 'weekly' ? 'WK' : 'DAY'}</button>
+        <button class="counter-goal-period" data-goal-period="${c.id}" type="button" title="Toggle daily/weekly/monthly goal">${periodLabel}</button>
         <input class="counter-goal-input" type="number" min="0" inputmode="numeric" placeholder="Goal" data-goal="${c.id}" value="${goal || ''}">
       </div>
       ${goal > 0 ? `
         <div class="counter-goal-bar-track"><div class="counter-goal-bar-fill" style="width:${pct}%"></div></div>
-        <div class="counter-goal-label">${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}${streak >= 2 ? ` · 🔥${streak}` : ''}</div>
+        <div class="counter-goal-label">${progress} / ${goal} ${periodText}${streak >= 2 ? ` · 🔥${streak}` : ''}</div>
       ` : ''}`;
     return `
-      <div class="counter-card${isFlipped ? ' flipped' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
-        <div class="counter-actions-tr">${gearBtn}${dupBtn}${removeBtn}</div>
+      <div class="counter-card${isFlipped ? ' flipped' : ''}${locked ? ' locked' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
+        <div class="counter-lock-tl">${lockBtn}</div>
+        <div class="counter-actions-tr">${gearBtn}${removeBtn}</div>
         ${dragHandle}
         <div class="card-flip-inner">
           <div class="card-face card-face-front">
@@ -1834,6 +1864,7 @@ function renderCounters(){
           <div class="card-face card-face-back">
             <div class="back-face-title">ACCENT COLOR</div>
             <div class="counter-swatch-row">${swatches}</div>
+            <button class="back-face-duplicate" data-duplicate="${c.id}" type="button" ${dupDisabled ? 'disabled' : ''} title="Duplicate counter">⧉ Duplicate counter</button>
             <button class="back-face-done" data-gear="${c.id}" type="button">‹ Back</button>
           </div>
         </div>
@@ -1867,11 +1898,12 @@ function duplicateCounter(id){
   const newId = newCounterId();
   // Copy the counter's config (name, color, goal) but start its tally at 0 —
   // this is a template duplicate, not a snapshot of current progress.
-  const copy = { ...src, id: newId, name: (src.name + ' Copy').slice(0, 24) };
+  const copy = { ...src, id: newId, name: (src.name + ' Copy').slice(0, 24), locked: false };
   settings.counters.splice(idx + 1, 0, copy);
   if(current) current.counts[newId] = 0;
   render();
   persist();
+  if(flippedIds.has(id)) scheduleFlipClose(id, FLIP_AFTER_PICK_MS);
 }
 function removeCounter(id){
   cancelHold();
@@ -1930,7 +1962,15 @@ function setCounterGoal(id, value){
 function toggleGoalPeriod(id){
   const c = settings.counters.find(c => c.id === id);
   if(!c) return;
-  c.goalPeriod = c.goalPeriod === 'weekly' ? 'daily' : 'weekly';
+  const cur = c.goalPeriod || 'daily';
+  c.goalPeriod = cur === 'daily' ? 'weekly' : cur === 'weekly' ? 'monthly' : 'daily';
+  render();
+  persist();
+}
+function toggleCounterLock(id){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  c.locked = !c.locked;
   render();
   persist();
 }
@@ -1979,6 +2019,9 @@ els.countersGrid.addEventListener('click', (e) => {
 
   const dupBtn = e.target.closest('[data-duplicate]');
   if(dupBtn){ if(!dupBtn.disabled) duplicateCounter(dupBtn.dataset.duplicate); return; }
+
+  const lockBtn = e.target.closest('[data-lock]');
+  if(lockBtn){ toggleCounterLock(lockBtn.dataset.lock); return; }
 
   const goalPeriodBtn = e.target.closest('[data-goal-period]');
   if(goalPeriodBtn){ toggleGoalPeriod(goalPeriodBtn.dataset.goalPeriod); return; }
@@ -2056,7 +2099,8 @@ function updateCounterCardLive(key){
     const c = settings.counters.find(c => c.id === key);
     const goal = c && c.goal ? c.goal : 0;
     if(goal > 0){
-      const period = c.goalPeriod === 'weekly' ? 'weekly' : 'daily';
+      const period = c.goalPeriod === 'weekly' ? 'weekly' : c.goalPeriod === 'monthly' ? 'monthly' : 'daily';
+      const periodText = period === 'weekly' ? 'this week' : period === 'monthly' ? 'this month' : 'today';
       const progress = counterProgress(key, period);
       const pct = Math.min(100, Math.round((progress / goal) * 100));
       const fill = card.querySelector('.counter-goal-bar-fill');
@@ -2064,7 +2108,7 @@ function updateCounterCardLive(key){
       const label = card.querySelector('.counter-goal-label');
       if(label){
         const streak = counterStreak(key, goal, period);
-        label.textContent = `${progress} / ${goal} ${period === 'weekly' ? 'this week' : 'today'}${streak >= 2 ? ` · 🔥${streak}` : ''}`;
+        label.textContent = `${progress} / ${goal} ${periodText}${streak >= 2 ? ` · 🔥${streak}` : ''}`;
       }
     }
   }
@@ -2082,6 +2126,8 @@ function updateCounterCardLive(key){
 
 function adjustCounter(key, dir){
   if(!current || current.onBreak) return;
+  const counter = settings.counters.find(c => c.id === key);
+  if(counter && counter.locked) return;
   const cur = current.counts[key] || 0;
   if(dir < 0 && cur <= 0) return;
   current.counts[key] = cur + dir;
