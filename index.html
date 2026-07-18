@@ -29,6 +29,11 @@
     --font-display: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
     --font-body: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    /* Reserved for the numbers that ARE the content — big counter tallies,
+       the shift timer, stat totals — so they read as instrument-panel digits
+       rather than generic UI chrome. Kept to fonts already on-device (no
+       webfont fetch) so this stays reliable offline. */
+    --font-numeric: 'DIN Alternate', 'Bahnschrift', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
   }
 
   *{ box-sizing: border-box; margin:0; padding:0; }
@@ -232,8 +237,8 @@
   .dot.active{ box-shadow: 0 0 8px currentColor; animation: pulse 1.6s infinite; }
   @keyframes pulse{ 50%{ opacity:.3 } }
   .shift-timer{
-    font-family: var(--font-mono); font-size:12.5px; font-weight:700;
-    letter-spacing:0.5px; color:inherit; opacity:.85;
+    font-family: var(--font-numeric); font-size:13px; font-weight:700;
+    letter-spacing:0.5px; color:inherit; opacity:.85; font-variant-numeric: tabular-nums;
     border-left:1px solid var(--border); padding-left:8px; margin-left:2px;
   }
   .shift-pill.idle .shift-timer{ display:none; }
@@ -255,18 +260,6 @@
   .counter-label{
     font-family: var(--font-mono); font-size:11px; letter-spacing:3px;
     color: var(--muted-2); font-weight:700; margin-bottom:6px;
-  }
-  .counter-number{
-    font-family: var(--font-display);
-    font-size: clamp(48px, 13vmin, 128px); line-height:1; color: var(--accent);
-    text-shadow: 0 0 60px var(--accent-dim);
-    font-weight: 900;
-  }
-  .counter-number.flash{ animation: flashPulse .32s ease; }
-  @keyframes flashPulse{
-    0%{ text-shadow: 0 0 60px var(--accent-dim); }
-    35%{ text-shadow: 0 0 90px var(--accent), 0 0 30px var(--accent); }
-    100%{ text-shadow: 0 0 60px var(--accent-dim); }
   }
   .counter-status{ color: var(--muted); font-size: clamp(12px, 2.2vmin, 15px); font-weight:500; }
 
@@ -292,7 +285,7 @@
     backdrop-filter: blur(18px) saturate(160%);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     border:1px solid var(--border);
-    border-top-color: color-mix(in srgb, var(--text) 12%, var(--border));
+    border-top-color: color-mix(in srgb, var(--card-accent, var(--accent)) 40%, var(--border));
     border-radius:16px;
     box-shadow: 0 1px 0 0 color-mix(in srgb, var(--text) 6%, transparent) inset,
                 0 14px 34px -14px #00000066;
@@ -318,7 +311,7 @@
     transition: border-color .15s, color .15s;
   }
   .counter-card-label-input:hover{ border-color:#3a3a42; }
-  .counter-card-label-input:focus{ outline:none; border-color: var(--accent); color: var(--text); }
+  .counter-card-label-input:focus{ outline:none; border-color: var(--card-accent, var(--accent)); color: var(--text); }
   .counter-actions-tr{
     position:absolute; top:8px; right:8px; z-index:3; display:flex; flex-direction:column; gap:5px; align-items:center;
   }
@@ -451,11 +444,17 @@
   .add-tile-icon{ font-family: var(--font-display); font-size: clamp(18px, 3.2vmin, 24px); font-weight:900; line-height:1; }
   .add-tile-label{ font-family: var(--font-mono); font-size:9px; letter-spacing:1.5px; font-weight:700; }
   .counter-card-num{
-    font-family: var(--font-display); font-weight:900; color: var(--accent);
-    font-size: clamp(36px, 7.6vmin, 58px); line-height:1;
-    text-shadow: 0 0 40px var(--accent-dim);
+    font-family: var(--font-numeric); font-weight:700; color: var(--card-accent, var(--accent));
+    font-size: clamp(36px, 7.6vmin, 58px); line-height:1; letter-spacing:-1px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim));
   }
   .counter-card-num.flash{ animation: flashPulse .32s ease; }
+  @keyframes flashPulse{
+    0%{ text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim)); }
+    35%{ text-shadow: 0 0 70px var(--card-accent, var(--accent)), 0 0 24px var(--card-accent, var(--accent)); }
+    100%{ text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim)); }
+  }
   .counter-card-btns{ display:flex; gap:8px; width:100%; }
   .ctr-btn{
     flex:1; height: clamp(32px, 5.5vmin, 40px); border-radius:999px;
@@ -466,13 +465,13 @@
   }
   .ctr-btn:active{ transform: scale(.9); transition-duration: .05s; }
   .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
-  .counter-card.locked .card-face-front{ border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .counter-card.locked .card-face-front{ border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 45%, var(--border)); }
   .ctr-btn.minus{
     background: transparent; border:1.5px dashed var(--border); color: var(--muted);
   }
-  .ctr-btn.minus:not(:disabled):hover{ border-color: var(--accent); color: var(--text); }
+  .ctr-btn.minus:not(:disabled):hover{ border-color: var(--card-accent, var(--accent)); color: var(--text); }
   .ctr-btn.plus{
-    background: var(--accent); border:1.5px solid var(--accent); color:#140900;
+    background: var(--card-accent, var(--accent)); border:1.5px solid var(--card-accent, var(--accent)); color:#140900;
   }
   .ctr-btn.plus:not(:disabled):hover{ filter: brightness(1.12); }
 
@@ -523,7 +522,7 @@
     font-family: var(--font-mono); font-size: 10px; letter-spacing:2px;
     color: var(--muted-2); font-weight:700; margin-bottom:6px;
   }
-  .stat-box .val{ font-family: var(--font-display); font-weight:900; font-size: clamp(19px, 3.4vmin, 28px); }
+  .stat-box .val{ font-family: var(--font-numeric); font-weight:700; font-size: clamp(19px, 3.4vmin, 28px); letter-spacing:-0.5px; font-variant-numeric: tabular-nums; }
 
   .hist-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
   .hist-title{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:15.5px; }
@@ -1934,6 +1933,12 @@ function removeCounter(id){
     actionLabel: 'Undo',
     duration: 6000,
     onAction: () => {
+      // Another counter may have been added/duplicated while this toast was
+      // showing, so re-check the limit rather than assuming there's still room.
+      if(settings.counters.length >= MAX_COUNTERS){
+        showToast(`Can't restore "${removedCounter.name}" — 8 counter limit reached`);
+        return;
+      }
       // idx was this counter's position at removal time; other counters may
       // have been added/removed/duplicated since, so clamp it to the current
       // length rather than trusting a now-possibly-stale index.
