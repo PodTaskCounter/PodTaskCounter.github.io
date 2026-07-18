@@ -1029,8 +1029,8 @@
     </div>
     <div class="toggle-row">
       <div>
-        <div class="lbl-main">Sound on log</div>
-        <div class="lbl-sub">Quick click when a task logs</div>
+        <div class="lbl-main">Sound effects</div>
+        <div class="lbl-sub">Plays a chime when you log a task, start/end a shift, or take a break</div>
       </div>
       <label class="switch"><input type="checkbox" id="toggleSound"><span class="slider"></span></label>
     </div>
@@ -1058,6 +1058,17 @@
         <div class="lbl-sub">Restore shifts from a CSV previously exported from here</div>
         <input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none;">
         <button class="btn" id="importCsvBtn" type="button" style="margin-top:8px;">Choose CSV file…</button>
+      </div>
+    </div>
+    <div class="toggle-row" style="align-items:flex-start;">
+      <div>
+        <div class="lbl-main">Full backup</div>
+        <div class="lbl-sub">Save or restore everything — shift history, counters, goals, and settings — as one JSON file</div>
+        <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none;">
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="exportJsonBtn" type="button">Download backup…</button>
+          <button class="btn" id="importJsonBtn" type="button">Restore from file…</button>
+        </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -1259,6 +1270,9 @@ const els = {
   toggleLightTheme: document.getElementById('toggleLightTheme'),
   importCsvBtn: document.getElementById('importCsvBtn'),
   importCsvInput: document.getElementById('importCsvInput'),
+  exportJsonBtn: document.getElementById('exportJsonBtn'),
+  importJsonBtn: document.getElementById('importJsonBtn'),
+  importJsonInput: document.getElementById('importJsonInput'),
   editOverlay: document.getElementById('editOverlay'),
   editDate: document.getElementById('editDate'),
   editStart: document.getElementById('editStart'),
@@ -2061,25 +2075,43 @@ function getAudioCtx(){
   }
   return sharedAudioCtx;
 }
-function playLogSound(){
+// Schedules a single short tone on the shared context at `startOffset`
+// seconds from now. Failures here are swallowed by the caller (playChime)
+// since audio is a nice-to-have, never something that should interrupt a
+// shift action if the browser's audio stack misbehaves.
+function playTone(ctx, freq, startOffset, duration, peakGain){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  const t0 = ctx.currentTime + startOffset;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(peakGain, t0 + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+  osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+}
+// Plays a short sequence of tones (a "chime") back to back. Used for every
+// audible cue in the app — a single-note chime is just a sequence of one.
+function playChime(freqs, opts){
   if(settings.soundEnabled === false) return;
   const ctx = getAudioCtx();
   if(!ctx) return;
   try{
     if(ctx.state === 'suspended') ctx.resume();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 880;
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.1);
-    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+    const gap = (opts && opts.gap) || 0.09;
+    const duration = (opts && opts.duration) || 0.1;
+    const peakGain = (opts && opts.peakGain) || 0.15;
+    freqs.forEach((freq, i) => playTone(ctx, freq, i * gap, duration, peakGain));
   }catch(e){ /* audio not available, ignore */ }
 }
+function playLogSound(){ playChime([880], { duration: 0.09 }); }
+function playShiftStartSound(){ playChime([523.25, 783.99], { gap: 0.11, duration: 0.14 }); } // C5 -> G5, rising
+function playShiftEndSound(){ playChime([783.99, 523.25], { gap: 0.13, duration: 0.16 }); } // G5 -> C5, falling
+function playBreakStartSound(){ playChime([392], { duration: 0.18, peakGain: 0.13 }); } // G4, single low tone
+function playBreakResumeSound(){ playChime([523.25, 659.25], { gap: 0.09, duration: 0.11 }); } // C5 -> E5, short rising
 
 // Lightweight per-tap UI sync: updates only the number, minus-button state,
 // and goal bar on the affected card, plus the top-line stats. Avoids the
@@ -2179,9 +2211,11 @@ els.breakBtn.addEventListener('click', () => {
     current.breaks.push({ start: current.breakStart, end: new Date().toISOString() });
     current.onBreak = false;
     current.breakStart = null;
+    playBreakResumeSound();
   } else {
     current.onBreak = true;
     current.breakStart = new Date().toISOString();
+    playBreakStartSound();
   }
   render();
   persist();
@@ -2196,6 +2230,7 @@ els.endBtn.addEventListener('click', () => {
       }
       history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, counterNames: Object.fromEntries(settings.counters.map(c => [c.id, c.name])), tasks: totalCount(current.counts), breaks: current.breaks || [], agentName: current.agentName || null });
       current = null;
+      playShiftEndSound();
       render();
       persist();
     });
@@ -2209,6 +2244,7 @@ els.endBtn.addEventListener('click', () => {
   const counts = {};
   settings.counters.forEach(c => { counts[c.id] = 0; });
   current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [], agentName: settings.agentName || null };
+  playShiftStartSound();
   render();
   persist();
 });
@@ -2364,6 +2400,176 @@ els.importCsvInput.addEventListener('change', async () => {
   render();
   persist();
   showToast(`Imported ${imported} shift${imported === 1 ? '' : 's'}${skipped ? ` (${skipped} row${skipped === 1 ? '' : 's'} skipped)` : ''}.`);
+});
+
+// ---- Full JSON backup / restore ----
+// Unlike CSV (shift history only), this round-trips everything: the
+// in-progress shift if one is running, parked shifts, counters/colors/goals,
+// and settings. Meant for moving to a new browser/device or a full restore.
+const BACKUP_SCHEMA = 'pod-task-tracker-backup';
+function buildBackupPayload(){
+  return {
+    schema: BACKUP_SCHEMA,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: { current, history, settings, parkedShifts }
+  };
+}
+els.exportJsonBtn.addEventListener('click', () => {
+  const json = JSON.stringify(buildBackupPayload(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pod-task-tracker-backup-${toDateInput(new Date().toISOString())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+});
+
+// Rebuilds a counters array the same defensive way loadState() does, so a
+// hand-edited or older-version backup can never leave settings.counters
+// empty or malformed.
+function sanitizeImportedCounters(list){
+  if(!Array.isArray(list) || list.length === 0) return DEFAULT_COUNTERS.map(c => ({ ...c }));
+  const seenIds = new Set();
+  return list.slice(0, MAX_COUNTERS).map(raw => {
+    let id = (raw && typeof raw.id === 'string' && raw.id) ? raw.id : newCounterId();
+    while(seenIds.has(id)) id = newCounterId();
+    seenIds.add(id);
+    const counter = { id, name: (raw && typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim().slice(0, 24) : 'Counter' };
+    if(raw && typeof raw.color === 'string') counter.color = raw.color;
+    if(raw && Number.isFinite(raw.goal) && raw.goal > 0) counter.goal = raw.goal;
+    if(raw && (raw.goalPeriod === 'weekly' || raw.goalPeriod === 'monthly')) counter.goalPeriod = raw.goalPeriod;
+    if(raw && raw.locked) counter.locked = true;
+    return counter;
+  });
+}
+function sanitizeImportedBreaks(raw){
+  return Array.isArray(raw) ? raw.filter(b => b && b.start && b.end) : [];
+}
+function sanitizeImportedShift(raw, counterIds){
+  if(!raw || typeof raw !== 'object') return null;
+  const start = safeParseDate(raw.startTime);
+  if(!start) return null;
+  const counts = migrateCounts(raw);
+  counterIds.forEach(id => { if(counts[id] === undefined) counts[id] = 0; });
+  const breakStartDate = safeParseDate(raw.breakStart);
+  const onBreak = !!raw.onBreak && !!breakStartDate;
+  const lastAction = (raw.lastAction && typeof raw.lastAction.key === 'string'
+    && (raw.lastAction.dir === 1 || raw.lastAction.dir === -1)
+    && safeParseDate(raw.lastAction.time))
+    ? { key: raw.lastAction.key, dir: raw.lastAction.dir, time: raw.lastAction.time }
+    : null;
+  return {
+    startTime: start.toISOString(),
+    counts,
+    lastAction,
+    onBreak,
+    breakStart: onBreak ? breakStartDate.toISOString() : null,
+    breaks: sanitizeImportedBreaks(raw.breaks),
+    agentName: (typeof raw.agentName === 'string' && raw.agentName) ? raw.agentName : null
+  };
+}
+function sanitizeImportedHistoryEntry(raw, counterIds){
+  if(!raw || typeof raw !== 'object') return null;
+  const start = safeParseDate(raw.start);
+  const end = safeParseDate(raw.end);
+  if(!start || !end) return null;
+  const counts = migrateCounts(raw);
+  counterIds.forEach(id => { if(counts[id] === undefined) counts[id] = 0; });
+  const entry = {
+    start: start.toISOString(),
+    end: end.toISOString(),
+    counts,
+    counterNames: (raw.counterNames && typeof raw.counterNames === 'object') ? raw.counterNames : {},
+    tasks: Number.isFinite(raw.tasks) ? raw.tasks : totalCount(counts),
+    breaks: sanitizeImportedBreaks(raw.breaks),
+    agentName: (typeof raw.agentName === 'string' && raw.agentName) ? raw.agentName : null,
+    edited: !!raw.edited
+  };
+  if(Number.isFinite(raw.breakMinutes)) entry.breakMinutes = raw.breakMinutes;
+  return entry;
+}
+function sanitizeImportedParkedShifts(raw, counterIds){
+  const out = {};
+  if(!raw || typeof raw !== 'object') return out;
+  Object.keys(raw).forEach(name => {
+    const shift = sanitizeImportedShift(raw[name], counterIds);
+    if(shift) out[name] = shift;
+  });
+  return out;
+}
+function applyImportedBackup(payload){
+  const data = (payload && payload.data && typeof payload.data === 'object') ? payload.data : payload;
+  if(!data || typeof data !== 'object') throw new Error("that file doesn't look like a backup");
+
+  const importedSettings = (data.settings && typeof data.settings === 'object') ? data.settings : {};
+  const nextCounters = sanitizeImportedCounters(importedSettings.counters);
+  const counterIds = nextCounters.map(c => c.id);
+
+  const nextSettings = Object.assign(
+    { autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark' },
+    importedSettings,
+    { counters: nextCounters }
+  );
+
+  const nextHistory = Array.isArray(data.history)
+    ? data.history.map(h => sanitizeImportedHistoryEntry(h, counterIds)).filter(Boolean)
+    : [];
+  nextHistory.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  const nextCurrent = sanitizeImportedShift(data.current, counterIds);
+  const nextParked = sanitizeImportedParkedShifts(data.parkedShifts, counterIds);
+
+  // Nothing above mutates app state, so a malformed file throws before
+  // anything here runs — commit everything together rather than field by
+  // field, so the app is never left with new settings but stale history.
+  settings = nextSettings;
+  history = nextHistory;
+  current = nextCurrent;
+  parkedShifts = nextParked;
+  editingIndex = null;
+  els.editOverlay.classList.remove('show');
+  flippedIds = new Set();
+  cancelHold();
+  dragState = null;
+
+  document.body.classList.toggle('compact', !!settings.compactMode);
+  els.compactBtn.classList.toggle('on', !!settings.compactMode);
+  els.toggleAutoStart.checked = !!settings.autoStartShift;
+  els.toggleSound.checked = settings.soundEnabled !== false;
+  els.toggleLightTheme.checked = !!settings.lightTheme;
+  document.body.classList.toggle('theme-light', !!settings.lightTheme);
+  applyBackground();
+  updateAgentBadge();
+
+  render();
+  persist();
+}
+els.importJsonBtn.addEventListener('click', () => els.importJsonInput.click());
+els.importJsonInput.addEventListener('change', async () => {
+  const file = els.importJsonInput.files[0];
+  els.importJsonInput.value = '';
+  if(!file) return;
+  let payload;
+  try{
+    payload = JSON.parse(await file.text());
+  }catch(e){
+    alert("That file isn't valid JSON.");
+    return;
+  }
+  const ok = confirm("Restore from this backup? This replaces all current shift history, counters, goals, and settings — including anything logged since your last backup. This can't be undone.");
+  if(!ok) return;
+  try{
+    applyImportedBackup(payload);
+    els.settingsOverlay.classList.remove('show');
+    showToast('Backup restored');
+  }catch(e){
+    alert("Could not restore that backup — " + e.message);
+  }
 });
 
 // ---- Edit shift modal ----
