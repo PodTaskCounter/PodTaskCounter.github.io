@@ -24,6 +24,13 @@
     --muted-2: #57575f;
     --accent: #ff7a2e;
     --accent-dim: #ff7a2e33;
+    /* Cool counterpart to --accent, pulled from the violet already used in the
+       ambient background glow. Reserved for structural/utility chrome (icon
+       toggles, focus rings outside the counter cards, table accents) so the
+       warm orange stays reserved for "your data" — the active shift, the
+       counters themselves, task counts. */
+    --accent-2: #7a5cff;
+    --accent-2-dim: #7a5cff33;
     --good: #4ade80;
     --warn: #fbbf24;
     --font-display: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
@@ -177,13 +184,16 @@
     margin-bottom: clamp(14px, 3vmin, 28px);
   }
   .eyebrow{
-    color: var(--accent); font-family: var(--font-mono);
+    color: var(--accent); font-family: var(--font-mono); display:flex; align-items:center; gap:7px;
     font-size: 10.5px; font-weight:700; letter-spacing: 3px; margin-bottom:6px;
   }
+  .eyebrow::before{ content:''; width:8px; height:8px; background: var(--accent); border-radius:2px; flex:none; }
   h1{
     font-family: var(--font-display);
     font-size: clamp(19px, 4.5vmin, 34px); font-weight:900; letter-spacing:-0.5px;
+    text-shadow: 0 0 30px var(--accent-dim);
   }
+  body.bg-white h1, body.theme-light h1{ text-shadow:none; }
   .header-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
   .icon-btn{
     width:34px; height:34px; border-radius:9px; border:1px solid var(--border);
@@ -192,7 +202,7 @@
     transition: filter .15s, color .15s;
   }
   .icon-btn:hover{ color: var(--text); filter: brightness(1.2); }
-  .icon-btn.on{ color: var(--accent); border-color: var(--accent); }
+  .icon-btn.on{ color: var(--accent-2); border-color: var(--accent-2); }
 
   body.bg-white{ --bg: #ffffff; }
   body.bg-white h1{ color:#161616; }
@@ -261,7 +271,14 @@
     font-family: var(--font-mono); font-size:11px; letter-spacing:3px;
     color: var(--muted-2); font-weight:700; margin-bottom:6px;
   }
-  .counter-status{ color: var(--muted); font-size: clamp(12px, 2.2vmin, 15px); font-weight:500; }
+  .counter-status{ color: var(--muted); font-size: clamp(12px, 2.2vmin, 15px); font-weight:500; display:flex; align-items:center; gap:7px; }
+  .counter-status::before{
+    content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex:none; opacity:.5;
+  }
+  body.shift-active .counter-status{ color: var(--good); }
+  body.shift-active .counter-status::before{ opacity:1; box-shadow: 0 0 6px currentColor; }
+  body.shift-break .counter-status{ color: var(--warn); }
+  body.shift-break .counter-status::before{ opacity:1; }
 
   /* ---- Dynamic counter grid (up to MAX_COUNTERS cards, replaces the old single Log Task circle) ---- */
   .counters-grid{
@@ -277,6 +294,7 @@
   .card-flip-inner{
     position:relative; width:100%; height:100%;
     transform-style: preserve-3d; transition: transform .5s ease;
+    will-change: transform;
   }
   .counter-card.flipped .card-flip-inner{ transform: rotateY(180deg); }
   .card-face{
@@ -296,7 +314,7 @@
     background-image: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent 65%);
     transition: border-color .15s, box-shadow .15s, transform .15s;
   }
-  .counter-card:hover .card-face-front{ transform: translateY(-2px); }
+  .counter-card:hover .card-face-front{ transform: translateY(-2px); will-change: transform; }
   .card-face-back{ transform: rotateY(180deg); }
   .counter-card-label{
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
@@ -327,9 +345,9 @@
   }
   .counter-remove:hover, .counter-gear:hover, .counter-lock:hover{ color: var(--accent); border-color: var(--accent); }
   .counter-remove:active, .counter-gear:active, .counter-lock:active{ transform: scale(.9); }
-  .counter-gear.on{ color: var(--accent); border-color: var(--accent); }
+  .counter-gear.on{ color: var(--accent-2); border-color: var(--accent-2); }
   .counter-lock{ font-size:10px; }
-  .counter-lock.on{ color:#140900; border-color: var(--accent); background: var(--accent); }
+  .counter-lock.on{ color:#0a0620; border-color: var(--accent-2); background: var(--accent-2); }
   .counter-card{ --card-accent: var(--accent); --card-accent-dim: var(--accent-dim); }
 
   /* ---- Long-press-to-remove: a radial fill sweeps in while held; releasing
@@ -444,16 +462,16 @@
   .add-tile-icon{ font-family: var(--font-display); font-size: clamp(18px, 3.2vmin, 24px); font-weight:900; line-height:1; }
   .add-tile-label{ font-family: var(--font-mono); font-size:9px; letter-spacing:1.5px; font-weight:700; }
   .counter-card-num{
-    font-family: var(--font-numeric); font-weight:700; color: var(--card-accent, var(--accent));
-    font-size: clamp(36px, 7.6vmin, 58px); line-height:1; letter-spacing:-1px;
+    font-family: var(--font-numeric); font-weight:800; color: var(--card-accent, var(--accent));
+    font-size: clamp(50px, 11.5vmin, 80px); line-height:1; letter-spacing:-1.5px;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim));
+    text-shadow: 0 0 46px var(--card-accent-dim, var(--accent-dim));
   }
   .counter-card-num.flash{ animation: flashPulse .32s ease; }
   @keyframes flashPulse{
-    0%{ text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim)); }
-    35%{ text-shadow: 0 0 70px var(--card-accent, var(--accent)), 0 0 24px var(--card-accent, var(--accent)); }
-    100%{ text-shadow: 0 0 40px var(--card-accent-dim, var(--accent-dim)); }
+    0%{ text-shadow: 0 0 46px var(--card-accent-dim, var(--accent-dim)); }
+    35%{ text-shadow: 0 0 76px var(--card-accent, var(--accent)), 0 0 26px var(--card-accent, var(--accent)); }
+    100%{ text-shadow: 0 0 46px var(--card-accent-dim, var(--accent-dim)); }
   }
   .counter-card-btns{ display:flex; gap:8px; width:100%; }
   .ctr-btn{
@@ -546,7 +564,7 @@
   th{
     text-align:left; font-family: var(--font-mono); font-size:10px;
     letter-spacing:1.5px; color: var(--muted-2); font-weight:700;
-    padding-bottom:10px; border-bottom:1px solid var(--border);
+    padding-bottom:10px; border-bottom:1px solid color-mix(in srgb, var(--accent-2) 25%, var(--border));
   }
   th:last-child, td:last-child{ text-align:right; }
   td{ padding: clamp(7px, 1.6vmin, 11px) 0; border-bottom: 1px solid #1c1c20; font-size: clamp(12px, 1.8vmin, 13.5px); }
@@ -564,7 +582,19 @@
   }
   .hist-breakdown b{ color: var(--text); font-weight:600; }
   .hist-breakdown.empty{ color: var(--muted-2); font-style:italic; }
-  .empty-hist{ color: var(--muted-2); font-size:13px; padding: 18px 0; text-align:center; }
+  .empty-hist{
+    color: var(--muted-2); font-size:13px; padding: 28px 0 24px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .empty-hist::before{
+    content:''; width:34px; height:34px; border-radius:10px;
+    border:1.5px dashed var(--muted-2);
+    background-image:
+      linear-gradient(var(--muted-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--muted-2) 1px, transparent 1px);
+    background-size: 50% 50%; background-position: center; background-repeat:no-repeat;
+    opacity:.5;
+  }
 
   .hist-sparkline{
     background: var(--panel-2); border:1px solid var(--border); border-radius:10px;
@@ -1638,7 +1668,7 @@ function renderImpl(){
   renderSparkline(visibleHistory);
   if(visibleHistory.length === 0){
     els.emptyHist.textContent = agentFilter ? `No shifts logged for ${agentFilter} yet` : 'No shifts logged yet';
-    els.emptyHist.style.display = 'block';
+    els.emptyHist.style.display = 'flex';
   } else {
     els.emptyHist.style.display = 'none';
     [...history].map((h, i) => ({ h, i })).filter(({ h }) => !agentFilter || h.agentName === agentFilter).reverse().forEach(({ h, i }) => {
@@ -1867,7 +1897,7 @@ function renderCounters(){
         <div class="card-flip-inner">
           <div class="card-face card-face-front">
             <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="24" spellcheck="false">
-            <div class="counter-card-num" data-key="${c.id}" style="color:${cardColor}; text-shadow:0 0 40px ${cardColorDim};">${val}</div>
+            <div class="counter-card-num" data-key="${c.id}" style="color:${cardColor}; text-shadow:0 0 46px ${cardColorDim};">${val}</div>
             <div class="counter-card-btns">
               <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
               <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" style="background:${cardColor}; border-color:${cardColor};" ${plusDisabled ? 'disabled' : ''}>+</button>
