@@ -7,12 +7,12 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2c2c2a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pod Tracker">
+<link rel="manifest" href="manifest.json">
 <style>
   :root{
     --bg: #2c2c2a;
@@ -309,13 +309,16 @@
                 0 14px 34px -14px #00000066;
     padding: clamp(20px, 3.2vmin, 28px) clamp(14px, 2.6vmin, 18px);
     display:flex; flex-direction:column; align-items:center; gap: clamp(10px, 2vmin, 14px);
-    text-align:center; justify-content:center;
+    text-align:center; justify-content:center; overflow:hidden;
     /* cursor-tracked glow, position set via JS on mousemove */
     background-image: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent 65%);
     transition: border-color .15s, box-shadow .15s, transform .15s;
   }
   .counter-card:hover .card-face-front{ transform: translateY(-2px); will-change: transform; }
-  .card-face-back{ transform: rotateY(180deg); }
+  .card-face-back{
+    transform: rotateY(180deg);
+    overflow-y:auto; justify-content:flex-start; padding-top: clamp(16px, 2.6vmin, 22px);
+  }
   .counter-card-label{
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
     color: var(--muted-2); font-weight:700; background: var(--panel-2);
@@ -384,15 +387,35 @@
     font-family: var(--font-mono); font-size: 10.5px; letter-spacing:2px;
     color: var(--muted-2); font-weight:700;
   }
-  .counter-swatch-row{ display:flex; gap:9px; flex-wrap:wrap; justify-content:center; padding: 4px 0; }
+  .counter-swatch-row{
+    display:flex; gap:5px; flex-wrap:wrap; justify-content:center; padding: 4px 2px;
+    flex-shrink:0; max-height:76px; overflow-y:auto; overscroll-behavior:contain;
+  }
   .counter-swatch{
-    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--border);
+    width:19px; height:19px; border-radius:50%; border:1.5px solid var(--border);
     cursor:pointer; padding:0; flex:none; transition: transform .1s, border-color .15s;
   }
   .counter-swatch:hover{ transform: scale(1.15); }
   .counter-swatch.selected{ border-color: var(--text); box-shadow: 0 0 0 2px var(--panel); }
+  .counter-swatch-custom{
+    position:relative; overflow:hidden; padding:0; cursor:pointer;
+    background: conic-gradient(from 0deg, #f87171, #fbbf24, #4ade80, #38bdf8, #818cf8, #f472b6, #f87171);
+  }
+  .counter-swatch-custom input[type="color"]{
+    position:absolute; inset:-4px; width:calc(100% + 8px); height:calc(100% + 8px);
+    opacity:0; cursor:pointer; border:none; padding:0;
+  }
+  .back-face-hold-row{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family: var(--font-mono); font-size:10.5px; color: var(--muted); margin-top:2px;
+  }
+  .back-face-hold-row input{
+    width:42px; text-align:center; background: var(--panel-2); border:1px solid var(--border);
+    border-radius:6px; color: var(--text); font-family: var(--font-numeric); font-size:12px; padding:3px 2px;
+  }
+  .back-face-hold-row input:focus{ outline:none; border-color: var(--card-accent, var(--accent)); }
   .back-face-duplicate{
-    margin-top:14px; font-family: var(--font-mono); font-size:11px; font-weight:700;
+    margin-top:2px; font-family: var(--font-mono); font-size:11px; font-weight:700;
     color: var(--muted); background: var(--panel-2); border:1px solid var(--border);
     border-radius:999px; padding:7px 16px; cursor:pointer;
     display:flex; align-items:center; gap:6px;
@@ -423,12 +446,16 @@
     height:100%; background: var(--card-accent); border-radius:999px; transition: width .25s ease;
   }
   .counter-goal-label{ font-family: var(--font-mono); font-size:10px; color: var(--muted); margin-top:1px; }
+  .counter-goal-streak{
+    display:inline-flex; align-items:center; margin-left:6px; padding-left:6px;
+    border-left:1px solid var(--border); color: var(--warn); font-weight:700;
+  }
 
   .confirm-btn.confirming{ background: var(--accent) !important; color:#140900 !important; border-color: var(--accent) !important; font-weight:900; }
 
   .toast-wrap{
-    position:fixed; left:50%; bottom:22px; transform: translateX(-50%);
-    display:flex; flex-direction:column; gap:8px; z-index:80; align-items:center; width:min(92vw, 380px);
+    position:fixed; top:140px; right:16px; left:auto; bottom:auto;
+    display:flex; flex-direction:column; gap:8px; z-index:80; align-items:flex-end; width:min(92vw, 380px);
   }
   .toast{
     display:flex; align-items:center; gap:12px;
@@ -442,7 +469,7 @@
     width:100%;
     animation: toastIn .28s cubic-bezier(.34,1.56,.64,1);
   }
-  @keyframes toastIn{ from{ opacity:0; transform: translateY(10px) scale(.96); } to{ opacity:1; transform:none; } }
+  @keyframes toastIn{ from{ opacity:0; transform: translateY(-10px) scale(.96); } to{ opacity:1; transform:none; } }
   .toast span.msg{ flex:1; }
   .toast button{
     background: none; border:1px solid var(--border); border-radius:7px; color: var(--accent);
@@ -484,6 +511,11 @@
   .ctr-btn:active{ transform: scale(.9); transition-duration: .05s; }
   .ctr-btn:disabled{ opacity:.3; cursor:not-allowed; }
   .counter-card.locked .card-face-front{ border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 45%, var(--border)); }
+  .counter-card.swap-selected .card-face-front{
+    border-color: var(--card-accent, var(--accent));
+    box-shadow: 0 0 0 2px var(--card-accent-dim, var(--accent-dim));
+  }
+  .counter-card.swap-selected .counter-drag-handle{ color: var(--card-accent, var(--accent)); opacity:1; }
   .ctr-btn.minus{
     background: transparent; border:1.5px dashed var(--border); color: var(--muted);
   }
@@ -492,6 +524,12 @@
     background: var(--card-accent, var(--accent)); border:1.5px solid var(--card-accent, var(--accent)); color:#140900;
   }
   .ctr-btn.plus:not(:disabled):hover{ filter: brightness(1.12); }
+  .ctr-btn.plus.charging{ animation: plusCharge 0.55s ease forwards; }
+  @keyframes plusCharge{
+    0%{ transform: scale(1); filter: brightness(1); }
+    70%{ transform: scale(1.08); filter: brightness(1.3); }
+    100%{ transform: scale(1.14); filter: brightness(1.5); }
+  }
 
   .action-row{ display:flex; flex-wrap:wrap; gap: clamp(8px, 2vmin, 14px); }
   .btn{
@@ -665,6 +703,32 @@
     color: var(--text); padding:9px 10px; font-size:13px; font-family: var(--font-mono);
   }
   .field select{ cursor:pointer; }
+  .agent-compare-modal{ width:360px; }
+  .agent-compare-tabs{ display:flex; gap:6px; margin-bottom:14px; }
+  .agent-compare-tab{
+    flex:1; font-family: var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.5px;
+    color: var(--muted); background: var(--panel-2); border:1px solid var(--border);
+    border-radius:8px; padding:8px 6px; cursor:pointer;
+  }
+  .agent-compare-tab:hover{ color: var(--text); }
+  .agent-compare-tab.active{ color:#140900; background: var(--accent); border-color: var(--accent); }
+  .agent-compare-table{ width:100%; border-collapse:collapse; }
+  .agent-compare-table th{
+    text-align:left; font-family: var(--font-mono); font-size:10px; letter-spacing:1px;
+    color: var(--muted-2); font-weight:700; padding-bottom:8px; border-bottom:1px solid var(--border);
+  }
+  .agent-compare-table th:not(:first-child), .agent-compare-table td:not(:first-child){ text-align:right; }
+  .agent-compare-table td{ padding:9px 0; border-bottom:1px solid #1c1c20; font-size:13px; }
+  .agent-compare-table td:last-child{ color: var(--accent); font-weight:700; font-family: var(--font-numeric); }
+  .help-modal{ width:380px; }
+  .help-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  .help-list li{ display:flex; flex-direction:column; gap:3px; }
+  .help-key{
+    font-family: var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.5px;
+    color: var(--accent); background: var(--panel-2); border:1px solid var(--border);
+    border-radius:6px; padding:3px 8px; align-self:flex-start;
+  }
+  .help-list li span:last-child{ color: var(--muted); font-size:13px; line-height:1.4; }
   .welcome-modal{ text-align:center; }
   .welcome-modal .welcome-greeting{
     font-family: var(--font-display); font-size: clamp(22px,4vmin,30px);
@@ -723,8 +787,9 @@
       <button class="agent-badge" id="agentBadge" type="button" title="Change agent"><span>👤</span><span id="agentBadgeText">Set agent name</span></button>
     </div>
     <div class="header-right">
-      <button class="icon-btn" id="compactBtn" title="Toggle compact mode">⤢</button>
-      <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+      <button class="icon-btn" id="helpBtn" title="Shortcuts & gestures" aria-label="Shortcuts and gestures help">?</button>
+      <button class="icon-btn" id="compactBtn" title="Toggle compact mode" aria-label="Toggle compact mode">⤢</button>
+      <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">⚙</button>
       <div class="shift-pill idle" id="shiftPill">
         <span class="dot" id="shiftDot"></span>
         <span id="shiftPillText">Loading…</span>
@@ -773,6 +838,7 @@
           <select class="hist-filter-select" id="histAgentFilter" title="Filter by agent">
             <option value="">All agents</option>
           </select>
+          <button class="clear-btn" id="agentCompareBtn" title="Compare totals across agents">👥 Compare</button>
           <button class="clear-btn export" id="exportBtn">⬇ CSV</button>
           <button class="clear-btn" id="clearBtn">🗑 Clear</button>
         </div>
@@ -1100,6 +1166,17 @@
         </div>
       </div>
     </div>
+    <div class="toggle-row" style="align-items:flex-start;">
+      <div>
+        <div class="lbl-main">Counter setup only</div>
+        <div class="lbl-sub">Share just the counter names, colors, and goals — no shift history or personal data — to set up another station the same way</div>
+        <input type="file" id="importSetupInput" accept=".json,application/json" style="display:none;">
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="exportSetupBtn" type="button">Export setup…</button>
+          <button class="btn" id="importSetupBtn" type="button">Import setup…</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn primary" id="settingsCloseBtn">Done</button>
     </div>
@@ -1115,6 +1192,39 @@
     <div class="modal-actions">
       <button class="btn" id="exportCancelBtn">Cancel</button>
       <button class="btn primary" id="exportConfirmBtn">Export</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="agentCompareOverlay">
+  <div class="modal agent-compare-modal">
+    <h3>Agent totals</h3>
+    <div class="agent-compare-tabs">
+      <button class="agent-compare-tab active" data-compare-range="today" type="button">Today</button>
+      <button class="agent-compare-tab" data-compare-range="week" type="button">This week</button>
+      <button class="agent-compare-tab" data-compare-range="month" type="button">This month</button>
+    </div>
+    <div id="agentCompareBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="agentCompareCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="helpOverlay">
+  <div class="modal help-modal">
+    <h3>Shortcuts &amp; gestures</h3>
+    <ul class="help-list">
+      <li><span class="help-key">Tap +</span><span>Log one</span></li>
+      <li><span class="help-key">Hold +</span><span>Log several at once (set the amount on the card's back — flip it with the gear icon)</span></li>
+      <li><span class="help-key">Hold ×</span><span>Remove a counter</span></li>
+      <li><span class="help-key">Drag ⠿⠿⠿</span><span>Drag onto another card to swap their positions</span></li>
+      <li><span class="help-key">Tap ⠿⠿⠿</span><span>Tap one card's handle, then another, to swap them without dragging</span></li>
+      <li><span class="help-key">1–8</span><span>Log a tap on the counter in that position (while not typing in a field)</span></li>
+      <li><span class="help-key">Ctrl/⌘ + Shift + L</span><span>Log a tap on the first counter from anywhere</span></li>
+    </ul>
+    <div class="modal-actions">
+      <button class="btn" id="helpCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -1167,7 +1277,9 @@ const DEFAULT_COUNTERS = [
 ];
 const MAX_COUNTERS = 8;
 const AGENT_NAMES = ['Arias', 'Bebbles', 'Blanco', 'Castigador', 'Celo', 'Dela Gante', 'Delfin', 'Educado', 'Gonzaga', 'Guillaran', 'Mijares', 'Montesclaros', 'Ravina', 'Saniel', 'Wolf'];
-const COLOR_PALETTE = ['#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'];
+const COLOR_PALETTE = [
+  '#ff7a2e', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f87171', '#f472b6', '#94a3b8'
+];
 let settings = { autoStartShift: false, soundEnabled: true, compactMode: false, background: 'dark', counters: DEFAULT_COUNTERS.map(c => ({ ...c })) };
 let editingIndex = null;
 
@@ -1302,6 +1414,9 @@ const els = {
   exportJsonBtn: document.getElementById('exportJsonBtn'),
   importJsonBtn: document.getElementById('importJsonBtn'),
   importJsonInput: document.getElementById('importJsonInput'),
+  exportSetupBtn: document.getElementById('exportSetupBtn'),
+  importSetupBtn: document.getElementById('importSetupBtn'),
+  importSetupInput: document.getElementById('importSetupInput'),
   editOverlay: document.getElementById('editOverlay'),
   editDate: document.getElementById('editDate'),
   editStart: document.getElementById('editStart'),
@@ -1318,6 +1433,13 @@ const els = {
   exportTo: document.getElementById('exportTo'),
   exportConfirmBtn: document.getElementById('exportConfirmBtn'),
   exportCancelBtn: document.getElementById('exportCancelBtn'),
+  agentCompareBtn: document.getElementById('agentCompareBtn'),
+  agentCompareOverlay: document.getElementById('agentCompareOverlay'),
+  agentCompareBody: document.getElementById('agentCompareBody'),
+  agentCompareCloseBtn: document.getElementById('agentCompareCloseBtn'),
+  helpBtn: document.getElementById('helpBtn'),
+  helpOverlay: document.getElementById('helpOverlay'),
+  helpCloseBtn: document.getElementById('helpCloseBtn'),
   backToTopBtn: document.getElementById('backToTopBtn'),
   tourBanner: document.getElementById('tourBanner'),
   tourBannerDismiss: document.getElementById('tourBannerDismiss'),
@@ -1463,6 +1585,27 @@ function checkGoalPeriodReset(){
   }
 }
 
+// ---- Idle-shift nudge: catches a shift that's been left running for hours
+// with no taps logged — most often someone forgot to end it, which quietly
+// skews the shift-average stat. Checked once a minute; only nudges once per
+// IDLE_NUDGE_MS stretch of continued silence so it doesn't repeat every
+// minute, and resets whenever a shift starts or ends (see endBtn handler). ----
+const IDLE_NUDGE_MS = 3 * 60 * 60 * 1000; // 3 hours
+let lastIdleNudgeAt = 0;
+function checkIdleShift(){
+  if(!current || current.onBreak) return; // a break is already an explicit "not working" signal
+  const lastActivity = new Date(current.lastAction ? current.lastAction.time : current.startTime).getTime();
+  if(!Number.isFinite(lastActivity)) return;
+  const idleMs = Date.now() - lastActivity;
+  if(idleMs < IDLE_NUDGE_MS) return;
+  if(Date.now() - lastIdleNudgeAt < IDLE_NUDGE_MS) return;
+  lastIdleNudgeAt = Date.now();
+  showToast("Still on shift? It's been a while since your last log.", {
+    actionLabel: 'End shift',
+    onAction: () => els.endBtn.click()
+  });
+}
+
 // Brings a parked shift back to life as `current`: pulls it out of
 // parkedShifts, migrates its counts against the live counter set (in case
 // counters changed while it was parked), and — if it was auto-parked by a
@@ -1527,8 +1670,10 @@ function loadState(){
   render();
   persist();
   checkGoalPeriodReset();
+  checkIdleShift();
 }
 setInterval(checkGoalPeriodReset, 60000);
+setInterval(checkIdleShift, 60000);
 
 // Same "always save the latest state, never overlap" queue as the desktop
 // app — cheap here since storageSet is synchronous, but keeps behavior
@@ -1827,8 +1972,56 @@ function cancelHold(){
   holdTargetId = null;
 }
 
+// ---- Long-press "+" for a quick multi-add (+5 by default, or a custom
+// amount per counter — see the "Hold + adds" field on the card's back face).
+// A plain tap still does the normal +1 via the click handler below; holding
+// past PLUS_HOLD_MS fires the bigger add directly and sets plusHoldFired so
+// the click that follows the release doesn't ALSO add +1 on top of it. ----
+const PLUS_HOLD_MS = 550;
+const DEFAULT_HOLD_AMOUNT = 5;
+let plusHoldTimer = null;
+let plusHoldTargetKey = null;
+let plusHoldFired = false;
+function findPlusBtn(key){
+  return els.countersGrid.querySelector(`.ctr-btn.plus[data-key="${key}"]`);
+}
+function startPlusHold(key){
+  cancelPlusHold();
+  // A previous hold may have fired (bulk-added) without a matching click
+  // ever following it — e.g. the pointer was dragged off the button before
+  // release, so no click landed on it to consume the flag below. Starting a
+  // fresh press means that flag is stale; clear it so it doesn't swallow
+  // this (unrelated) tap's click once it lands.
+  plusHoldFired = false;
+  plusHoldTargetKey = key;
+  const btn = findPlusBtn(key);
+  if(btn) btn.classList.add('charging');
+  plusHoldTimer = setTimeout(() => {
+    const k = plusHoldTargetKey;
+    plusHoldFired = true;
+    cancelPlusHold();
+    if(k){
+      const counter = settings.counters.find(c => c.id === k);
+      const amount = (counter && Number.isFinite(counter.holdAmount) && counter.holdAmount >= 2) ? counter.holdAmount : DEFAULT_HOLD_AMOUNT;
+      adjustCounter(k, amount);
+    }
+  }, PLUS_HOLD_MS);
+}
+function cancelPlusHold(){
+  if(plusHoldTimer){ clearTimeout(plusHoldTimer); plusHoldTimer = null; }
+  if(plusHoldTargetKey){
+    const btn = findPlusBtn(plusHoldTargetKey);
+    if(btn) btn.classList.remove('charging');
+  }
+  plusHoldTargetKey = null;
+}
+
 // ---- Drag-to-swap state (pointer-based so it works on both mouse and touch) ----
 let dragState = null; // { sourceId }
+// Tap-to-swap: an alternative to dragging for reordering counters, which can
+// be fiddly on narrow cards. Tapping a drag handle (without dragging it onto
+// another card) selects it; tapping a second handle swaps the two.
+let swapSelectId = null;
 function getCardAt(x, y){
   const el = document.elementFromPoint(x, y);
   return el ? el.closest('.counter-card[data-id]') : null;
@@ -1836,21 +2029,53 @@ function getCardAt(x, y){
 function clearDragHighlights(){
   els.countersGrid.querySelectorAll('.drag-source, .drag-over').forEach(el => el.classList.remove('drag-source', 'drag-over'));
 }
-function swapCounters(idA, idB){
+function swapCounters(idA, idB, { silent } = {}){
   if(idA === idB) return;
   const idxA = settings.counters.findIndex(c => c.id === idA);
   const idxB = settings.counters.findIndex(c => c.id === idB);
   if(idxA === -1 || idxB === -1) return;
+  const nameA = settings.counters[idxA].name;
+  const nameB = settings.counters[idxB].name;
   [settings.counters[idxA], settings.counters[idxB]] = [settings.counters[idxB], settings.counters[idxA]];
   render();
   persist();
+  if(!silent){
+    // Swapping the same pair again restores the original order exactly —
+    // no extra state needed to make "Undo" work here.
+    showToast(`Swapped "${nameA}" and "${nameB}"`, {
+      actionLabel: 'Undo',
+      onAction: () => swapCounters(idA, idB, { silent: true })
+    });
+  }
+}
+function clearSwapSelect(){
+  swapSelectId = null;
+}
+function toggleSwapSelect(id){
+  if(swapSelectId === id){
+    clearSwapSelect();
+    renderCounters();
+  } else if(swapSelectId){
+    const prev = swapSelectId;
+    swapSelectId = null;
+    swapCounters(prev, id); // swapCounters() already re-renders + persists
+  } else {
+    swapSelectId = id;
+    renderCounters();
+  }
 }
 function endDrag(){
   if(!dragState) return;
   const { sourceId, overId } = dragState;
   clearDragHighlights();
   dragState = null;
-  if(overId) swapCounters(sourceId, overId);
+  if(overId){
+    if(swapSelectId) clearSwapSelect();
+    swapCounters(sourceId, overId);
+  } else {
+    // No cross-card movement happened — treat this as a tap on the handle.
+    toggleSwapSelect(sourceId);
+  }
 }
 
 function renderCounters(){
@@ -1865,14 +2090,18 @@ function renderCounters(){
     const minusDisabled = !active || onBreak || val === 0 || locked;
     const plusDisabled = !active || onBreak || locked;
     const isFlipped = flippedIds.has(c.id);
-    const removeBtn = `<button class="counter-remove" data-remove="${c.id}" type="button" title="Hold to remove"><span>×</span></button>`;
-    const gearBtn = `<button class="counter-gear${isFlipped ? ' on' : ''}" data-gear="${c.id}" type="button" title="Counter settings">⚙</button>`;
+    const removeBtn = `<button class="counter-remove" data-remove="${c.id}" type="button" title="Hold to remove" aria-label="Hold to remove ${escapeAttr(c.name)} counter"><span>×</span></button>`;
+    const gearBtn = `<button class="counter-gear${isFlipped ? ' on' : ''}" data-gear="${c.id}" type="button" title="Counter settings" aria-label="${escapeAttr(c.name)} counter settings">⚙</button>`;
     const dupDisabled = settings.counters.length >= MAX_COUNTERS;
-    const lockBtn = `<button class="counter-lock${locked ? ' on' : ''}" data-lock="${c.id}" type="button" title="${locked ? 'Unlock counter' : 'Lock counter (prevent accidental taps)'}">${locked ? '🔒' : '🔓'}</button>`;
-    const dragHandle = n > 1 ? `<div class="counter-drag-handle" data-drag="${c.id}" title="Drag onto another card to swap position">⠿⠿⠿</div>` : '';
+    const lockBtn = `<button class="counter-lock${locked ? ' on' : ''}" data-lock="${c.id}" type="button" title="${locked ? 'Unlock counter' : 'Lock counter (prevent accidental taps)'}" aria-label="${locked ? `Unlock ${escapeAttr(c.name)} counter` : `Lock ${escapeAttr(c.name)} counter to prevent accidental taps`}">${locked ? '🔒' : '🔓'}</button>`;
+    const dragHandle = n > 1 ? `<div class="counter-drag-handle" data-drag="${c.id}" title="Drag onto another card to swap, or tap two handles to swap them" role="button" aria-label="Reorder ${escapeAttr(c.name)}: drag onto another card, or tap this then another to swap">⠿⠿⠿</div>` : '';
     const cardColor = c.color || 'var(--accent)';
     const cardColorDim = c.color ? c.color + '33' : 'var(--accent-dim)';
-    const swatches = COLOR_PALETTE.map(hex => `<button class="counter-swatch${(c.color === hex || (!c.color && hex === COLOR_PALETTE[0])) ? ' selected' : ''}" data-swatch="${c.id}" data-color="${hex}" type="button" style="background:${hex}" title="Set accent color"></button>`).join('');
+    const isCustomColor = !!c.color && !COLOR_PALETTE.includes(c.color);
+    const swatches = COLOR_PALETTE.map(hex => `<button class="counter-swatch${(c.color === hex || (!c.color && hex === COLOR_PALETTE[0])) ? ' selected' : ''}" data-swatch="${c.id}" data-color="${hex}" type="button" style="background:${hex}" title="Set accent color"></button>`).join('')
+      + `<label class="counter-swatch counter-swatch-custom${isCustomColor ? ' selected' : ''}" style="${isCustomColor ? `background:${c.color};` : ''}" title="Pick a custom color">
+          <input type="color" data-custom-color="${c.id}" value="${isCustomColor ? c.color : '#ff7a2e'}" aria-label="Pick a custom accent color for ${escapeAttr(c.name)}">
+        </label>`;
     const goal = c.goal || 0;
     const period = c.goalPeriod === 'weekly' ? 'weekly' : c.goalPeriod === 'monthly' ? 'monthly' : 'daily';
     const periodLabel = period === 'weekly' ? 'WK' : period === 'monthly' ? 'MO' : 'DAY';
@@ -1887,10 +2116,10 @@ function renderCounters(){
       </div>
       ${goal > 0 ? `
         <div class="counter-goal-bar-track"><div class="counter-goal-bar-fill" style="width:${pct}%"></div></div>
-        <div class="counter-goal-label">${progress} / ${goal} ${periodText}${streak >= 2 ? ` · 🔥${streak}` : ''}</div>
+        <div class="counter-goal-label">${progress} / ${goal} ${periodText}${streak >= 2 ? `<span class="counter-goal-streak">🔥${streak}</span>` : ''}</div>
       ` : ''}`;
     return `
-      <div class="counter-card${isFlipped ? ' flipped' : ''}${locked ? ' locked' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
+      <div class="counter-card${isFlipped ? ' flipped' : ''}${locked ? ' locked' : ''}${swapSelectId === c.id ? ' swap-selected' : ''}" data-id="${c.id}" style="--card-accent:${cardColor}; --card-accent-dim:${cardColorDim};">
         <div class="counter-lock-tl">${lockBtn}</div>
         <div class="counter-actions-tr">${gearBtn}${removeBtn}</div>
         ${dragHandle}
@@ -1900,13 +2129,17 @@ function renderCounters(){
             <div class="counter-card-num" data-key="${c.id}" style="color:${cardColor}; text-shadow:0 0 46px ${cardColorDim};">${val}</div>
             <div class="counter-card-btns">
               <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
-              <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" style="background:${cardColor}; border-color:${cardColor};" ${plusDisabled ? 'disabled' : ''}>+</button>
+              <button class="ctr-btn plus" data-key="${c.id}" data-dir="1" type="button" style="background:${cardColor}; border-color:${cardColor};" ${plusDisabled ? 'disabled' : ''} title="Tap to log one. Hold to add ${c.holdAmount || DEFAULT_HOLD_AMOUNT}.">+</button>
             </div>
             ${goalRow}
           </div>
           <div class="card-face card-face-back">
             <div class="back-face-title">ACCENT COLOR</div>
             <div class="counter-swatch-row">${swatches}</div>
+            <div class="back-face-hold-row">
+              <span>Hold + adds</span>
+              <input type="number" min="2" max="99" value="${c.holdAmount || DEFAULT_HOLD_AMOUNT}" data-hold-amount="${c.id}">
+            </div>
             <button class="back-face-duplicate" data-duplicate="${c.id}" type="button" ${dupDisabled ? 'disabled' : ''} title="Duplicate counter">⧉ Duplicate counter</button>
             <button class="back-face-done" data-gear="${c.id}" type="button">‹ Back</button>
           </div>
@@ -1952,6 +2185,7 @@ function removeCounter(id){
   cancelHold();
   flippedIds.delete(id);
   clearFlipClose(id);
+  if(swapSelectId === id) clearSwapSelect();
   const idx = settings.counters.findIndex(c => c.id === id);
   if(idx === -1) return;
   const removedCounter = settings.counters[idx];
@@ -1991,9 +2225,19 @@ function commitRename(id, value, inputEl){
   if(inputEl) inputEl.value = c.name;
   persist();
 }
+// Counter colors get interpolated directly into style="..." attributes when
+// rendering cards (not through escapeAttr), so anything accepted here must
+// already be a safe, well-formed hex color — otherwise a crafted value
+// (e.g. from an imported setup/backup file) could break out of the
+// attribute and inject arbitrary HTML/attributes. Never relax this to a
+// looser check.
+function isValidHexColor(str){
+  return typeof str === 'string' && /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3}([0-9a-fA-F]{2})?)?$/.test(str);
+}
 function setCounterColor(id, hex){
   const c = settings.counters.find(c => c.id === id);
   if(!c) return;
+  if(!isValidHexColor(hex)) return;
   c.color = hex;
   render();
   persist();
@@ -2005,6 +2249,14 @@ function setCounterGoal(id, value){
   if(!c) return;
   const n = parseInt(value, 10);
   c.goal = (isNaN(n) || n <= 0) ? 0 : n;
+  render();
+  persist();
+}
+function setCounterHoldAmount(id, value){
+  const c = settings.counters.find(c => c.id === id);
+  if(!c) return;
+  const n = parseInt(value, 10);
+  c.holdAmount = (isNaN(n) || n < 2) ? DEFAULT_HOLD_AMOUNT : Math.min(99, n);
   render();
   persist();
 }
@@ -2041,6 +2293,10 @@ els.countersGrid.addEventListener('pointerdown', (e) => {
     startHold(removeBtn.dataset.remove);
     return;
   }
+  const plusBtn = e.target.closest('.ctr-btn.plus');
+  if(plusBtn && !plusBtn.disabled){
+    startPlusHold(plusBtn.dataset.key);
+  }
 });
 els.countersGrid.addEventListener('pointermove', (e) => {
   if(!dragState) return;
@@ -2053,8 +2309,8 @@ els.countersGrid.addEventListener('pointermove', (e) => {
     dragState.overId = null;
   }
 });
-window.addEventListener('pointerup', () => { cancelHold(); endDrag(); });
-window.addEventListener('pointercancel', () => { cancelHold(); endDrag(); });
+window.addEventListener('pointerup', () => { cancelHold(); cancelPlusHold(); endDrag(); });
+window.addEventListener('pointercancel', () => { cancelHold(); cancelPlusHold(); endDrag(); });
 
 els.countersGrid.addEventListener('click', (e) => {
   // A completed long-press or drag already re-rendered the grid, so any
@@ -2078,6 +2334,7 @@ els.countersGrid.addEventListener('click', (e) => {
   const ctrBtn = e.target.closest('.ctr-btn');
   if(ctrBtn){
     if(ctrBtn.disabled) return;
+    if(plusHoldFired){ plusHoldFired = false; return; }
     adjustCounter(ctrBtn.dataset.key, parseInt(ctrBtn.dataset.dir, 10));
     return;
   }
@@ -2088,7 +2345,11 @@ els.countersGrid.addEventListener('change', (e) => {
   const input = e.target.closest('[data-rename]');
   if(input){ commitRename(input.dataset.rename, input.value, input); return; }
   const goalInput = e.target.closest('[data-goal]');
-  if(goalInput){ setCounterGoal(goalInput.dataset.goal, goalInput.value); }
+  if(goalInput){ setCounterGoal(goalInput.dataset.goal, goalInput.value); return; }
+  const customColorInput = e.target.closest('[data-custom-color]');
+  if(customColorInput){ setCounterColor(customColorInput.dataset.customColor, customColorInput.value); return; }
+  const holdAmountInput = e.target.closest('[data-hold-amount]');
+  if(holdAmountInput){ setCounterHoldAmount(holdAmountInput.dataset.holdAmount, holdAmountInput.value); }
 });
 els.countersGrid.addEventListener('keydown', (e) => {
   if(e.key === 'Enter' && (e.target.matches('[data-rename]') || e.target.matches('[data-goal]'))) e.target.blur();
@@ -2147,6 +2408,13 @@ function playShiftStartSound(){ playChime([523.25, 783.99], { gap: 0.11, duratio
 function playShiftEndSound(){ playChime([783.99, 523.25], { gap: 0.13, duration: 0.16 }); } // G5 -> C5, falling
 function playBreakStartSound(){ playChime([392], { duration: 0.18, peakGain: 0.13 }); } // G4, single low tone
 function playBreakResumeSound(){ playChime([523.25, 659.25], { gap: 0.09, duration: 0.11 }); } // C5 -> E5, short rising
+// Haptic buzz on devices that support it (mobile browsers) — reuses the
+// existing sound toggle rather than adding a second setting, and no-ops
+// silently wherever the Vibration API isn't available (desktop, iOS Safari).
+function vibrate(pattern){
+  if(settings.soundEnabled === false) return;
+  if(navigator.vibrate){ try{ navigator.vibrate(pattern); }catch(e){ /* ignore */ } }
+}
 
 // Lightweight per-tap UI sync: updates only the number, minus-button state,
 // and goal bar on the affected card, plus the top-line stats. Avoids the
@@ -2175,7 +2443,7 @@ function updateCounterCardLive(key){
       const label = card.querySelector('.counter-goal-label');
       if(label){
         const streak = counterStreak(key, goal, period);
-        label.textContent = `${progress} / ${goal} ${periodText}${streak >= 2 ? ` · 🔥${streak}` : ''}`;
+        label.innerHTML = `${progress} / ${goal} ${periodText}${streak >= 2 ? `<span class="counter-goal-streak">🔥${streak}</span>` : ''}`;
       }
     }
   }
@@ -2200,7 +2468,7 @@ function adjustCounter(key, dir){
   current.counts[key] = cur + dir;
   current.lastAction = { key, dir, time: new Date().toISOString() };
   els.counterStatus.textContent = dir > 0 ? 'Logged just now' : 'Adjusted';
-  if(dir > 0){ flashCounter(key); playLogSound(); }
+  if(dir > 0){ flashCounter(key); playLogSound(); vibrate(12); }
   updateCounterCardLive(key);
   persist();
 }
@@ -2247,10 +2515,12 @@ els.breakBtn.addEventListener('click', () => {
     current.onBreak = false;
     current.breakStart = null;
     playBreakResumeSound();
+    vibrate(15);
   } else {
     current.onBreak = true;
     current.breakStart = new Date().toISOString();
     playBreakStartSound();
+    vibrate([15, 60, 15]);
   }
   render();
   persist();
@@ -2265,7 +2535,9 @@ els.endBtn.addEventListener('click', () => {
       }
       history.push({ start: current.startTime, end: new Date().toISOString(), counts: { ...current.counts }, counterNames: Object.fromEntries(settings.counters.map(c => [c.id, c.name])), tasks: totalCount(current.counts), breaks: current.breaks || [], agentName: current.agentName || null });
       current = null;
+      lastIdleNudgeAt = 0;
       playShiftEndSound();
+      vibrate([20, 50, 20, 50, 20]);
       render();
       persist();
     });
@@ -2279,7 +2551,9 @@ els.endBtn.addEventListener('click', () => {
   const counts = {};
   settings.counters.forEach(c => { counts[c.id] = 0; });
   current = { startTime: new Date().toISOString(), counts, lastAction: null, onBreak: false, breakStart: null, breaks: [], agentName: settings.agentName || null };
+  lastIdleNudgeAt = 0;
   playShiftStartSound();
+  vibrate([20, 50, 20]);
   render();
   persist();
 });
@@ -2294,6 +2568,16 @@ els.clearBtn.addEventListener('click', () => {
 });
 
 // ---- CSV export (client-side Blob download, no native save dialog needed) ----
+// csvSafeCell guards against formula injection: a cell whose content starts
+// with =, +, -, @, tab, or CR can be interpreted as a formula by Excel/Sheets
+// once the CSV is opened there — CSV-quoting alone does NOT prevent this,
+// since it's the cell's own leading character that triggers it, not CSV
+// syntax. Counter names, agent names, and the breakdown string can all
+// contain user- or import-controlled text, so every cell goes through this.
+function csvSafeCell(value){
+  const str = String(value);
+  return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+}
 function toCsv(entries){
   const rows = [['Date','Start','End', ...settings.counters.map(c => c.name), 'Total Tasks', 'Break (min)', 'Breakdown', 'Agent']];
   entries.forEach(h => {
@@ -2301,7 +2585,7 @@ function toCsv(entries){
     const breakdownStr = shiftBreakdown(h).map(b => `${b.name}: ${b.count}`).join('; ');
     rows.push([fmtDate(h.start), fmtTime(h.start), fmtTime(h.end), ...settings.counters.map(ct => c[ct.id] || 0), h.tasks, totalBreakMinutes(h), breakdownStr, h.agentName || '']);
   });
-  return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  return rows.map(r => r.map(v => `"${csvSafeCell(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
 els.exportBtn.addEventListener('click', () => {
   if(history.length === 0){ alert('No shift history to export yet.'); return; }
@@ -2311,6 +2595,56 @@ els.exportBtn.addEventListener('click', () => {
   els.exportOverlay.classList.add('show');
 });
 els.exportCancelBtn.addEventListener('click', () => els.exportOverlay.classList.remove('show'));
+
+// ---- Agent totals comparison ----
+let agentCompareRange = 'today';
+function computeAgentTotals(range){
+  const now = new Date();
+  const boundary = range === 'week' ? startOfWeek(now) : range === 'month' ? startOfMonth(now) : startOfDay(now);
+  const totals = {}; // name -> { tasks, shifts }
+  const addShift = (agentName, start, counts) => {
+    if(new Date(start) < boundary) return;
+    const name = agentName || 'Unknown';
+    if(!totals[name]) totals[name] = { tasks: 0, shifts: 0 };
+    totals[name].tasks += totalCount(counts);
+    totals[name].shifts += 1;
+  };
+  history.forEach(h => addShift(h.agentName, h.start, h.counts || migrateCounts(h)));
+  if(current) addShift(current.agentName, current.startTime, current.counts);
+  return Object.entries(totals)
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.tasks - a.tasks);
+}
+function renderAgentCompare(){
+  const rows = computeAgentTotals(agentCompareRange);
+  els.agentCompareBody.innerHTML = rows.length ? `
+    <table class="agent-compare-table">
+      <thead><tr><th>AGENT</th><th>SHIFTS</th><th>TASKS</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr><td>${escapeAttr(r.name)}</td><td>${r.shifts}</td><td>${r.tasks}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  ` : `<div class="empty-hist">No shifts logged in this range yet</div>`;
+}
+els.agentCompareBtn.addEventListener('click', () => {
+  agentCompareRange = 'today';
+  document.querySelectorAll('.agent-compare-tab').forEach(t => t.classList.toggle('active', t.dataset.compareRange === 'today'));
+  renderAgentCompare();
+  els.agentCompareOverlay.classList.add('show');
+});
+els.agentCompareCloseBtn.addEventListener('click', () => els.agentCompareOverlay.classList.remove('show'));
+
+els.helpBtn.addEventListener('click', () => els.helpOverlay.classList.add('show'));
+els.helpCloseBtn.addEventListener('click', () => els.helpOverlay.classList.remove('show'));
+els.helpOverlay.addEventListener('click', (e) => { if(e.target === els.helpOverlay) els.helpOverlay.classList.remove('show'); });
+els.agentCompareOverlay.addEventListener('click', (e) => { if(e.target === els.agentCompareOverlay) els.agentCompareOverlay.classList.remove('show'); });
+document.querySelectorAll('.agent-compare-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    agentCompareRange = tab.dataset.compareRange;
+    document.querySelectorAll('.agent-compare-tab').forEach(t => t.classList.toggle('active', t === tab));
+    renderAgentCompare();
+  });
+});
 els.exportOverlay.addEventListener('click', (e) => { if(e.target === els.exportOverlay) els.exportOverlay.classList.remove('show'); });
 els.exportConfirmBtn.addEventListener('click', () => {
   const from = els.exportFrom.value;
@@ -2475,10 +2809,11 @@ function sanitizeImportedCounters(list){
     while(seenIds.has(id)) id = newCounterId();
     seenIds.add(id);
     const counter = { id, name: (raw && typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim().slice(0, 24) : 'Counter' };
-    if(raw && typeof raw.color === 'string') counter.color = raw.color;
+    if(raw && isValidHexColor(raw.color)) counter.color = raw.color;
     if(raw && Number.isFinite(raw.goal) && raw.goal > 0) counter.goal = raw.goal;
     if(raw && (raw.goalPeriod === 'weekly' || raw.goalPeriod === 'monthly')) counter.goalPeriod = raw.goalPeriod;
     if(raw && raw.locked) counter.locked = true;
+    if(raw && Number.isFinite(raw.holdAmount) && raw.holdAmount >= 2) counter.holdAmount = Math.min(99, raw.holdAmount);
     return counter;
   });
 }
@@ -2570,6 +2905,8 @@ function applyImportedBackup(payload){
   els.editOverlay.classList.remove('show');
   flippedIds = new Set();
   cancelHold();
+  cancelPlusHold();
+  clearSwapSelect();
   dragState = null;
 
   document.body.classList.toggle('compact', !!settings.compactMode);
@@ -2605,6 +2942,54 @@ els.importJsonInput.addEventListener('change', async () => {
   }catch(e){
     alert("Could not restore that backup — " + e.message);
   }
+});
+
+// ---- Counter-setup-only export/import: a lighter alternative to the full
+// backup, for sharing just the counter config (names/colors/goals) between
+// stations — no shift history, no agent name, nothing personal. ----
+const SETUP_SCHEMA = 'pod-task-tracker-counter-setup';
+els.exportSetupBtn.addEventListener('click', () => {
+  const payload = { schema: SETUP_SCHEMA, version: 1, exportedAt: new Date().toISOString(), counters: settings.counters };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pod-task-tracker-counter-setup-${toDateInput(new Date().toISOString())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Counter setup exported');
+});
+els.importSetupBtn.addEventListener('click', () => els.importSetupInput.click());
+els.importSetupInput.addEventListener('change', async () => {
+  const file = els.importSetupInput.files[0];
+  els.importSetupInput.value = '';
+  if(!file) return;
+  if(current){
+    alert("End the current shift before importing a counter setup — swapping counters mid-shift could mix up what's already been logged.");
+    return;
+  }
+  let payload;
+  try{
+    payload = JSON.parse(await file.text());
+  }catch(e){
+    alert("That file isn't valid JSON.");
+    return;
+  }
+  const rawCounters = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.counters)) ? payload.counters : null;
+  if(!rawCounters){
+    alert("That file doesn't look like a counter setup export.");
+    return;
+  }
+  const ok = confirm('Replace your current counters with this setup? Existing counter names, colors, and goals will be overwritten. Shift history is not affected.');
+  if(!ok) return;
+  settings.counters = sanitizeImportedCounters(rawCounters);
+  render();
+  persist();
+  els.settingsOverlay.classList.remove('show');
+  showToast('Counter setup imported');
 });
 
 // ---- Edit shift modal ----
@@ -2930,16 +3315,6 @@ document.addEventListener('visibilitychange', () => { if(document.visibilityStat
 window.addEventListener('pagehide', flushPersist);
 window.addEventListener('beforeunload', flushPersist);
 
-// ---- PWA: register service worker for offline support + installability.
-// Requires manifest.json and service-worker.js to sit alongside this file
-// on the same origin (both are provided separately). Silently no-ops if
-// unsupported (e.g. this sandboxed preview, or file:// in some browsers).
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => { /* offline support unavailable here; app still works online */ });
-  });
-}
-
 // ---- Cursor-tracked glow on counter cards ('2026 glass' hover effect) ----
 // Delegated on the grid container since cards are re-created on every render().
 if(window.matchMedia('(hover: hover) and (pointer: fine)').matches){
@@ -2958,6 +3333,16 @@ if(window.matchMedia('(hover: hover) and (pointer: fine)').matches){
 }
 
 loadState();
+
+// ---- PWA: register service worker for offline support + installability.
+// Requires manifest.json and service-worker.js to sit alongside this file
+// on the same origin (both are provided separately). Silently no-ops if
+// unsupported (e.g. this sandboxed preview, or file:// in some browsers).
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => { /* offline support unavailable here; app still works online */ });
+  });
+}
 </script>
 </body>
 </html>
