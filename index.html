@@ -67,6 +67,7 @@
     opacity: .45;
     animation: ambientDrift 34s ease-in-out infinite alternate;
     transition: opacity .6s ease;
+    will-change: transform;
   }
   body.shift-active::before{ opacity: .85; animation-duration: 22s; }
   body.shift-break::before{
@@ -794,7 +795,7 @@
 
   <div class="header">
     <div>
-      <div class="eyebrow">POD 2 COUNTER</div>
+      <div class="eyebrow">POD COUNTER</div>
       <h1>Pod Task Tracker</h1>
       <button class="agent-badge" id="agentBadge" type="button" title="Change agent"><span>👤</span><span id="agentBadgeText">Set agent name</span></button>
     </div>
@@ -2680,10 +2681,17 @@ els.helpOverlay.addEventListener('click', (e) => { if(e.target === els.helpOverl
 
 // ---- End of day note: a copy-pasteable summary of today's counters, in the
 // team's usual "Name Date / label / counter: value.. / summary: value" format.
-// The two label fields are remembered (they're usually the same every day);
-// the summary value is always left blank on open since it doesn't map to
-// any single counter and should reflect that day's actual number, not a
-// stale leftover from yesterday. ----
+// The two label fields are remembered (they're usually the same every day).
+// The summary value auto-fills from every counter whose name mentions
+// "confirmation", summed together (see findConfirmationCounterValue), since
+// that's what this line is for in practice; otherwise it's left blank, same
+// as before. Either way it stays freely editable — this is just a starting
+// point, not a lock. ----
+function findConfirmationCounterValue(){
+  const matches = settings.counters.filter(c => c.name.toLowerCase().includes('confirmation'));
+  if(!matches.length) return null;
+  return matches.reduce((sum, c) => sum + counterProgress(c.id, 'daily'), 0);
+}
 function formatEodDate(d){
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   return `${months[d.getMonth()]} ${d.getDate()} - ${d.getFullYear()}`;
@@ -2709,7 +2717,8 @@ function regenerateEodPreview(){
 els.eodNoteBtn.addEventListener('click', () => {
   els.eodLabelInput.value = settings.eodLabel !== undefined ? settings.eodLabel : 'COVERAGE BETA EOD';
   els.eodSummaryLabelInput.value = settings.eodSummaryLabel !== undefined ? settings.eodSummaryLabel : 'EOD OOS CWH POD 2 CONFIRMATION';
-  els.eodSummaryValueInput.value = '';
+  const confirmationValue = findConfirmationCounterValue();
+  els.eodSummaryValueInput.value = confirmationValue !== null ? confirmationValue : '';
   regenerateEodPreview();
   els.eodOverlay.classList.add('show');
 });
@@ -3425,12 +3434,22 @@ if(window.matchMedia('(hover: hover) and (pointer: fine)').matches){
     el.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`);
     el.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`);
   };
+  let glowPending = null;
+  let glowRafId = null;
+  const flushGlow = () => {
+    glowRafId = null;
+    if(glowPending){ applyGlow(glowPending.el, glowPending.e); glowPending = null; }
+  };
+  const queueGlow = (el, e) => {
+    glowPending = { el, e };
+    if(glowRafId === null) glowRafId = requestAnimationFrame(flushGlow);
+  };
   els.countersGrid.addEventListener('mousemove', (e) => {
     const front = e.target.closest('.card-face-front');
-    if(front) applyGlow(front, e);
+    if(front) queueGlow(front, e);
   });
   document.querySelectorAll('.panel').forEach(panel => {
-    panel.addEventListener('mousemove', (e) => applyGlow(panel, e));
+    panel.addEventListener('mousemove', (e) => queueGlow(panel, e));
   });
 }
 
