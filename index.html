@@ -329,6 +329,7 @@
     color: var(--muted-2); font-weight:700; background: var(--panel-2);
     border:1px solid var(--border); border-radius:999px; padding:6px 26px 6px 12px;
     text-align:center; text-transform:uppercase; width:100%; cursor:text;
+    text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
     transition: border-color .15s, color .15s;
   }
   .counter-card-label-input:hover{ border-color:#3a3a42; }
@@ -729,6 +730,17 @@
     border-radius:6px; padding:3px 8px; align-self:flex-start;
   }
   .help-list li span:last-child{ color: var(--muted); font-size:13px; line-height:1.4; }
+  .eod-modal{ width:420px; }
+  .eod-field-row{ display:flex; gap:10px; }
+  .eod-field-row .field{ flex:1; }
+  .eod-summary-value-field{ flex:0 0 90px; }
+  .eod-preview-label{ display:block; font-size:11.5px; color: var(--muted); margin-bottom:6px; font-weight:600; }
+  .eod-preview{
+    width:100%; min-height:220px; background: var(--panel-2); border:1px solid var(--border);
+    border-radius:8px; color: var(--text); padding:12px; font-size:12.5px; font-family: var(--font-mono);
+    line-height:1.6; resize:vertical; margin-bottom:4px;
+  }
+  .eod-preview:focus{ outline:none; border-color: var(--accent); }
   .welcome-modal{ text-align:center; }
   .welcome-modal .welcome-greeting{
     font-family: var(--font-display); font-size: clamp(22px,4vmin,30px);
@@ -787,6 +799,7 @@
       <button class="agent-badge" id="agentBadge" type="button" title="Change agent"><span>👤</span><span id="agentBadgeText">Set agent name</span></button>
     </div>
     <div class="header-right">
+      <button class="icon-btn" id="eodNoteBtn" title="End of day note" aria-label="Generate end of day note">📝</button>
       <button class="icon-btn" id="helpBtn" title="Shortcuts & gestures" aria-label="Shortcuts and gestures help">?</button>
       <button class="icon-btn" id="compactBtn" title="Toggle compact mode" aria-label="Toggle compact mode">⤢</button>
       <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">⚙</button>
@@ -1229,6 +1242,25 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="eodOverlay">
+  <div class="modal eod-modal">
+    <h3>End of day note</h3>
+    <div class="eod-field-row">
+      <div class="field"><label>Label</label><input type="text" id="eodLabelInput" maxlength="60" placeholder="e.g. COVERAGE BETA EOD"></div>
+    </div>
+    <div class="eod-field-row">
+      <div class="field"><label>Summary line label</label><input type="text" id="eodSummaryLabelInput" maxlength="60" placeholder="e.g. EOD OOS CWH POD 2 CONFIRMATION"></div>
+      <div class="field eod-summary-value-field"><label>Value</label><input type="number" id="eodSummaryValueInput" min="0"></div>
+    </div>
+    <label class="eod-preview-label">Preview — edit freely before copying</label>
+    <textarea id="eodPreview" class="eod-preview" rows="12" spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="eodCloseBtn">Close</button>
+      <button class="btn primary" id="eodCopyBtn">📋 Copy note</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ---- Storage layer: localStorage with an in-memory fallback ----
 // (Some embedded/sandboxed browser views block localStorage entirely. If
@@ -1440,6 +1472,14 @@ const els = {
   helpBtn: document.getElementById('helpBtn'),
   helpOverlay: document.getElementById('helpOverlay'),
   helpCloseBtn: document.getElementById('helpCloseBtn'),
+  eodNoteBtn: document.getElementById('eodNoteBtn'),
+  eodOverlay: document.getElementById('eodOverlay'),
+  eodLabelInput: document.getElementById('eodLabelInput'),
+  eodSummaryLabelInput: document.getElementById('eodSummaryLabelInput'),
+  eodSummaryValueInput: document.getElementById('eodSummaryValueInput'),
+  eodPreview: document.getElementById('eodPreview'),
+  eodCloseBtn: document.getElementById('eodCloseBtn'),
+  eodCopyBtn: document.getElementById('eodCopyBtn'),
   backToTopBtn: document.getElementById('backToTopBtn'),
   tourBanner: document.getElementById('tourBanner'),
   tourBannerDismiss: document.getElementById('tourBannerDismiss'),
@@ -2125,7 +2165,7 @@ function renderCounters(){
         ${dragHandle}
         <div class="card-flip-inner">
           <div class="card-face card-face-front">
-            <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="24" spellcheck="false">
+            <input class="counter-card-label-input" data-rename="${c.id}" value="${escapeAttr(c.name)}" maxlength="35" spellcheck="false">
             <div class="counter-card-num" data-key="${c.id}" style="color:${cardColor}; text-shadow:0 0 46px ${cardColorDim};">${val}</div>
             <div class="counter-card-btns">
               <button class="ctr-btn minus" data-key="${c.id}" data-dir="-1" type="button" ${minusDisabled ? 'disabled' : ''}>−</button>
@@ -2174,7 +2214,7 @@ function duplicateCounter(id){
   const newId = newCounterId();
   // Copy the counter's config (name, color, goal) but start its tally at 0 —
   // this is a template duplicate, not a snapshot of current progress.
-  const copy = { ...src, id: newId, name: (src.name + ' Copy').slice(0, 24), locked: false };
+  const copy = { ...src, id: newId, name: (src.name + ' Copy').slice(0, 35), locked: false };
   settings.counters.splice(idx + 1, 0, copy);
   if(current) current.counts[newId] = 0;
   render();
@@ -2217,7 +2257,7 @@ function removeCounter(id){
 function commitRename(id, value, inputEl){
   const c = settings.counters.find(c => c.id === id);
   if(!c) return;
-  c.name = value.trim().slice(0, 24) || 'Counter';
+  c.name = value.trim().slice(0, 35) || 'Counter';
   // Sync the field back to the sanitized name — otherwise a whitespace-only
   // or trimmed entry leaves the box showing the raw text the user typed
   // while the stored name is already different, until some unrelated
@@ -2637,6 +2677,68 @@ els.agentCompareCloseBtn.addEventListener('click', () => els.agentCompareOverlay
 els.helpBtn.addEventListener('click', () => els.helpOverlay.classList.add('show'));
 els.helpCloseBtn.addEventListener('click', () => els.helpOverlay.classList.remove('show'));
 els.helpOverlay.addEventListener('click', (e) => { if(e.target === els.helpOverlay) els.helpOverlay.classList.remove('show'); });
+
+// ---- End of day note: a copy-pasteable summary of today's counters, in the
+// team's usual "Name Date / label / counter: value.. / summary: value" format.
+// The two label fields are remembered (they're usually the same every day);
+// the summary value is always left blank on open since it doesn't map to
+// any single counter and should reflect that day's actual number, not a
+// stale leftover from yesterday. ----
+function formatEodDate(d){
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${months[d.getMonth()]} ${d.getDate()} - ${d.getFullYear()}`;
+}
+function regenerateEodPreview(){
+  const name = settings.agentName || 'Agent';
+  const label = els.eodLabelInput.value.trim();
+  const summaryLabel = els.eodSummaryLabelInput.value.trim();
+  const summaryValue = els.eodSummaryValueInput.value.trim();
+  const lines = [`${name} ${formatEodDate(new Date())}`];
+  if(label) lines.push(label);
+  lines.push('');
+  settings.counters.forEach(c => lines.push(`${c.name}: ${counterProgress(c.id, 'daily')}`));
+  if(summaryLabel && summaryValue){
+    lines.push('');
+    lines.push(`${summaryLabel}: ${summaryValue}`);
+  } else if(!summaryLabel && summaryValue){
+    lines.push('');
+    lines.push(summaryValue);
+  }
+  els.eodPreview.value = lines.join('\n');
+}
+els.eodNoteBtn.addEventListener('click', () => {
+  els.eodLabelInput.value = settings.eodLabel !== undefined ? settings.eodLabel : 'COVERAGE BETA EOD';
+  els.eodSummaryLabelInput.value = settings.eodSummaryLabel !== undefined ? settings.eodSummaryLabel : 'EOD OOS CWH POD 2 CONFIRMATION';
+  els.eodSummaryValueInput.value = '';
+  regenerateEodPreview();
+  els.eodOverlay.classList.add('show');
+});
+els.eodLabelInput.addEventListener('input', () => { settings.eodLabel = els.eodLabelInput.value; persist(); regenerateEodPreview(); });
+els.eodSummaryLabelInput.addEventListener('input', () => { settings.eodSummaryLabel = els.eodSummaryLabelInput.value; persist(); regenerateEodPreview(); });
+els.eodSummaryValueInput.addEventListener('input', regenerateEodPreview);
+els.eodCloseBtn.addEventListener('click', () => els.eodOverlay.classList.remove('show'));
+els.eodOverlay.addEventListener('click', (e) => { if(e.target === els.eodOverlay) els.eodOverlay.classList.remove('show'); });
+els.eodCopyBtn.addEventListener('click', async () => {
+  const text = els.eodPreview.value;
+  const fallbackCopy = () => {
+    els.eodPreview.focus();
+    els.eodPreview.select();
+    return document.execCommand('copy');
+  };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    } else if(!fallbackCopy()){
+      throw new Error('execCommand copy returned false');
+    }
+    showToast('EOD note copied to clipboard');
+  }catch(e){
+    try{
+      if(fallbackCopy()){ showToast('EOD note copied to clipboard'); return; }
+    }catch(e2){ /* fall through to manual-copy hint below */ }
+    alert("Couldn't copy automatically — the note is selected, so you can copy it with Ctrl/Cmd+C.");
+  }
+});
 els.agentCompareOverlay.addEventListener('click', (e) => { if(e.target === els.agentCompareOverlay) els.agentCompareOverlay.classList.remove('show'); });
 document.querySelectorAll('.agent-compare-tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -2728,7 +2830,7 @@ els.importCsvInput.addEventListener('change', async () => {
     if(!name) continue;
     let counter = settings.counters.find(c => c.name.toLowerCase() === name.toLowerCase());
     if(!counter && settings.counters.length < MAX_COUNTERS){
-      counter = { id: newCounterId(), name: name.slice(0, 24) };
+      counter = { id: newCounterId(), name: name.slice(0, 35) };
       settings.counters.push(counter);
     }
     counterCols.push({ col: i, counter });
@@ -2808,7 +2910,7 @@ function sanitizeImportedCounters(list){
     let id = (raw && typeof raw.id === 'string' && raw.id) ? raw.id : newCounterId();
     while(seenIds.has(id)) id = newCounterId();
     seenIds.add(id);
-    const counter = { id, name: (raw && typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim().slice(0, 24) : 'Counter' };
+    const counter = { id, name: (raw && typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim().slice(0, 35) : 'Counter' };
     if(raw && isValidHexColor(raw.color)) counter.color = raw.color;
     if(raw && Number.isFinite(raw.goal) && raw.goal > 0) counter.goal = raw.goal;
     if(raw && (raw.goalPeriod === 'weekly' || raw.goalPeriod === 'monthly')) counter.goalPeriod = raw.goalPeriod;
